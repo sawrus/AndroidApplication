@@ -2,6 +2,7 @@
 *.properties
 *.apk
 *.impl
+*.iml
 .idea
 
 # Windows image file caches

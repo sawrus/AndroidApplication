@@ -1,0 +1,37 @@
+orion:
+  accounts:
+    :columns:
+      - _id: TEXT
+      - email: TEXT
+    :meta:
+     :table: accounts
+     :extra_props: true
+  devices:
+    :columns:
+      - _id: TEXT
+      - name: TEXT
+      - account_id: TEXT
+    :meta:
+     :table: devices
+     :extra_props: true	 
+  messages:
+    :columns:
+      - _id: TEXT
+      - address: TEXT
+      - incoming: BOOLEAN
+      - data: TEXT
+      - date: TIMESTAMP 
+      - device_id: TEXT
+    :meta:
+     :table: messages
+     :extra_props: true	 
+  gps:
+    :columns:
+      - _id: TEXT
+      - date: TIMESTAMP 
+      - latitude: DOUBLE
+      - longitude: DOUBLE
+      - device_id: TEXT
+    :meta:
+     :table: gps
+     :extra_props: true	 	 

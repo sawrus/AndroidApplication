@@ -39,6 +39,13 @@ Getting Started
 This sample uses the Gradle build system. To build this project, use the
 "gradlew build" command or use "Import Project" in Android Studio.
 
+Local properties
+---------------
+local.properties (root of the repository)
+# windows sample
+ndk.dir=C\:\\ndk\\android-ndk-rXXx
+sdk.dir=C\:\\Users\\<User>\\AppData\\Local\\Android\\sdk
+
 Support
 -------
 

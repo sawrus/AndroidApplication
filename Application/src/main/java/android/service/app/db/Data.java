@@ -142,6 +142,9 @@ public abstract class Data
     public native String e();
     public native String f();
     public native String g();
+    public native String h();
+    public native String i();
+    public native String k();
 
     static {
         System.loadLibrary("Application");

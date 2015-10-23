@@ -3,6 +3,7 @@
 *.apk
 *.impl
 *.iml
+*.so
 .idea
 
 # Windows image file caches

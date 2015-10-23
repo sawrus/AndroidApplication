@@ -13,6 +13,7 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.json.JSONObject;
 
+import java.util.Map;
 import java.util.Set;
 
 public class RestBridge implements DataBridge<String, JsonHttpResponseHandler>
@@ -36,10 +37,15 @@ public class RestBridge implements DataBridge<String, JsonHttpResponseHandler>
         JsonHttpResponseHandler responseHandler = null;
         for (Message message: messages)
         {
-            JSONObject jsonMessage = new JSONObject(message.getData());
+            Map<String, Object> data = message.getData();
+            //todo: need to refactor
+            data.put(Message.DEVICE_ID, message.getDevice().getName());
+
+            JSONObject jsonMessage = new JSONObject(data);
             responseHandler = new JsonHttpResponseHandler();
             HttpClient.postJson(context, DatabaseHelper.MESSAGE.getTableName(), jsonMessage, responseHandler);
         }
+
         return responseHandler;
     }
 

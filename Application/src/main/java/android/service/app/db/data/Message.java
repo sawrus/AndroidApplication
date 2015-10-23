@@ -4,6 +4,8 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.service.app.db.Data;
+import android.service.app.db.DatabaseHelper;
+import android.service.app.db.inventory.Device;
 import android.service.app.utils.Log;
 
 import java.text.SimpleDateFormat;
@@ -23,6 +25,7 @@ public class Message extends Data
     private String data = "";
     private int device_id = -2;
     private String date = "";
+    private Device device = new Device();
 
     private static final String table_name = "message";
     public static final String ID = "id";
@@ -76,6 +79,11 @@ public class Message extends Data
         return insert(database, table_name, contentValues);
     }
 
+    public Device getDevice()
+    {
+        return device;
+    }
+
     public Map<String, Object> getData()
     {
         return new LinkedHashMap<String, Object>()
@@ -95,6 +103,8 @@ public class Message extends Data
 
         if (cursor.getCount() > 0)
         {
+            this.device = DatabaseHelper.DEVICE.selectFirstDevice(database);
+
             cursor.moveToFirst();
 
             do

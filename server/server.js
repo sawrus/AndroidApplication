@@ -49,7 +49,11 @@ function storeData(request, response, collection) {
     request.on('end', function () {
         // store to DB
         var obj = JSON.parse(data);
-        mongo.getDb().collection(collection).insertOne(obj);
+        mongo.getDb().collection(collection).insert(obj, {'ordered' : false}, function callback(err, doc) {
+            if (err) {
+                console.log("Error while adding to " + collection + ": " + err);
+            }
+        });
         // empty 200 OK response for now
         response.writeHead(200, "OK", {'Content-Type': 'text/html'});
         response.end();

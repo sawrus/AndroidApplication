@@ -41,9 +41,9 @@ public class RestBridge implements DataBridge<String, RestHttpResponseHandler>
             //todo: need to refactor
             data.put(Message.DEVICE_ID, message.getDevice().getName());
 
-            JSONObject jsonMessage = new JSONObject(data);
+            JSONObject jsonObject = new JSONObject(data);
             responseHandler = new RestHttpResponseHandler();
-            HttpClient.postJson(context, DatabaseHelper.MESSAGE.getTableName(), jsonMessage, responseHandler);
+            HttpClient.postJson(context, DatabaseHelper.MESSAGE.getTableName(), jsonObject, responseHandler);
         }
 
         return responseHandler;
@@ -58,7 +58,19 @@ public class RestBridge implements DataBridge<String, RestHttpResponseHandler>
     @Override
     public RestHttpResponseHandler postGps(Set<Gps> gpsSets)
     {
-        return null;
+        RestHttpResponseHandler responseHandler = null;
+        for (Gps gps: gpsSets)
+        {
+            Map<String, Object> data = gps.getData();
+            //todo: need to refactor
+            data.put(Message.DEVICE_ID, gps.getDevice().getName());
+
+            JSONObject jsonObject = new JSONObject(data);
+            responseHandler = new RestHttpResponseHandler();
+            HttpClient.postJson(context, DatabaseHelper.GPS.getTableName(), jsonObject, responseHandler);
+        }
+
+        return responseHandler;
     }
 
     @Override
@@ -70,7 +82,11 @@ public class RestBridge implements DataBridge<String, RestHttpResponseHandler>
     @Override
     public RestHttpResponseHandler postAccount(Account account)
     {
-        return null;
+        Map<String, Object> data = account.getData();
+        JSONObject jsonObject = new JSONObject(data);
+        RestHttpResponseHandler responseHandler = new RestHttpResponseHandler();
+        HttpClient.postJson(context, DatabaseHelper.ACCOUNT.getTableName(), jsonObject, responseHandler);
+        return responseHandler;
     }
 
     @Override
@@ -82,6 +98,10 @@ public class RestBridge implements DataBridge<String, RestHttpResponseHandler>
     @Override
     public RestHttpResponseHandler postDevice(Device device)
     {
-        return null;
+        Map<String, Object> data = device.getData();
+        JSONObject jsonObject = new JSONObject(data);
+        RestHttpResponseHandler responseHandler = new RestHttpResponseHandler();
+        HttpClient.postJson(context, DatabaseHelper.DEVICE.getTableName(), jsonObject, responseHandler);
+        return responseHandler;
     }
 }

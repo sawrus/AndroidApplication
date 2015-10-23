@@ -131,7 +131,7 @@ public abstract class Data
         return -1 == getId();
     }
 
-    protected abstract int getId();
+    public abstract int getId();
 
     public abstract Map<String, Object> getData();
 

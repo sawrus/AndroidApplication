@@ -4,13 +4,13 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.service.app.db.Data;
 import android.service.app.db.DatabaseHelper;
-import android.service.app.db.data.Message;
 import android.service.app.db.sync.Sync;
 import android.service.app.json.RestBridge;
 import android.service.app.utils.Log;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -30,12 +30,10 @@ public class RestSync<Input> extends AsyncTask<Input, Void, SyncOutput>
     @SafeVarargs
     protected final SyncOutput doInBackground(Input... voids)
     {
-        Log.v("RestSync:voids=" + Arrays.toString(voids));
-        //todo, you can use the part of implementation from AndroidApplication\Application\src\main\java\android\service\app\db\mongo\MongoClient.java
-
         try
         {
-            syncMessages();
+            restBridge.postMessages(getDelta(localDatabase.getMessages()));
+            restBridge.postGps(getDelta(localDatabase.getGpsSet()));
         }
         catch (Exception e)
         {
@@ -46,15 +44,14 @@ public class RestSync<Input> extends AsyncTask<Input, Void, SyncOutput>
         return new SyncOutput("success");
     }
 
-    private void syncMessages()
+    private <T extends Data> Set<T> getDelta(Set<T> dataSet)
     {
         Integer accountId = localDatabase.selectFirstDevice().getAccountId();
 
-        Set<Message> dataSet = localDatabase.getMessages();
         if (dataSet.isEmpty())
         {
             Log.v("no messages in local database");
-            return;
+            return Collections.emptySet();
         }
 
         String tableName = DatabaseHelper.MESSAGE.getTableName();
@@ -64,8 +61,8 @@ public class RestSync<Input> extends AsyncTask<Input, Void, SyncOutput>
         Integer newSyncId = -1;
 
         //todo: need to use guava
-        Set<Message> newDataSet = new LinkedHashSet<>();
-        for (Message data : dataSet)
+        Set<T> newDataSet = new LinkedHashSet<>();
+        for (T data : dataSet)
         {
             if (!data.isEmpty() && (data.getId() > syncId))
             {
@@ -75,9 +72,8 @@ public class RestSync<Input> extends AsyncTask<Input, Void, SyncOutput>
         }
 
         Log.v("newDataSet=" + newDataSet);
-
-        restBridge.postMessages(newDataSet);
         localDatabase.updateOrInsertSyncIfNeeded(new Sync(accountId, newSyncId, tableName));
+        return newDataSet;
     }
 
     @Override

@@ -4,7 +4,10 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.service.app.db.Data;
+import android.service.app.db.DatabaseHelper;
+import android.service.app.db.inventory.Device;
 import android.service.app.utils.Log;
+import android.view.DragEvent;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -18,6 +21,7 @@ public class Gps extends Data
     private double latitude = -3;
     private double longitude = -3;
     private String date = "";
+    private Device device = new Device();
 
     private static final String table_name = "gps";
     public static final String ID = "id";
@@ -43,6 +47,16 @@ public class Gps extends Data
         this.date = getDateTime();
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    public Device getDevice()
+    {
+        return device;
+    }
+
+    public void setDevice(Device device)
+    {
+        this.device = device;
     }
 
     @Override
@@ -139,6 +153,7 @@ public class Gps extends Data
 
         if (cursor.getCount() > 0)
         {
+            final Device device = DatabaseHelper.DEVICE.selectFirstDevice(database);
             cursor.moveToFirst();
 
             do
@@ -149,6 +164,7 @@ public class Gps extends Data
                 gps.setDeviceId(cursor.getInt(cursor.getColumnIndex(DEVICE_ID)));
                 gps.setLongitude(cursor.getDouble(cursor.getColumnIndex(LONGITUDE)));
                 gps.setLatitude(cursor.getDouble(cursor.getColumnIndex(LATITUDE)));
+                gps.setDevice(device);
 
                 gpsSet.add(gps);
                 Log.v("gps=" + gps + "; cursor=" + cursor);

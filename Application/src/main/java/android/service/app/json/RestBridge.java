@@ -1,5 +1,6 @@
 package android.service.app.json;
 
+import android.content.Context;
 import android.service.app.db.DataBridge;
 import android.service.app.db.DatabaseHelper;
 import android.service.app.db.data.Gps;
@@ -9,12 +10,20 @@ import android.service.app.db.user.Account;
 import android.service.app.http.HttpClient;
 
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
+
+import org.json.JSONObject;
 
 import java.util.Set;
 
 public class RestBridge implements DataBridge<String, JsonHttpResponseHandler>
 {
+    private final Context context;
+
+    public RestBridge(Context context)
+    {
+        this.context = context;
+    }
+
     @Override
     public Set<Message> getMessages(String s)
     {
@@ -24,9 +33,13 @@ public class RestBridge implements DataBridge<String, JsonHttpResponseHandler>
     @Override
     public JsonHttpResponseHandler postMessages(Set<Message> messages)
     {
-        RequestParams requestParams = new RequestParams();
-        JsonHttpResponseHandler responseHandler = new JsonHttpResponseHandler();
-        HttpClient.post(DatabaseHelper.MESSAGE.getTableName(), requestParams, responseHandler);
+        JsonHttpResponseHandler responseHandler = null;
+        for (Message message: messages)
+        {
+            JSONObject jsonMessage = new JSONObject(message.getData());
+            responseHandler = new JsonHttpResponseHandler();
+            HttpClient.postJson(context, DatabaseHelper.MESSAGE.getTableName(), jsonMessage, responseHandler);
+        }
         return responseHandler;
     }
 

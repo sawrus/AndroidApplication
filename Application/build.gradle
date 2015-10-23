@@ -22,9 +22,14 @@ dependencies {
     compile 'com.android.support:support-v4:23.0.0'
     compile 'com.android.support:gridlayout-v7:23.0.0'
     compile 'com.android.support:cardview-v7:23.0.0'
-    compile 'io.netty:netty-all:4.0.28.Final'
-    compile 'org.mongodb:mongo-java-driver:3.0.3'
+
     compile 'com.loopj.android:android-async-http:1.4.9'
+
+// libraries for async requests to mongo:
+//    compile 'io.netty:netty-all:4.0.28.Final'
+//    compile 'org.mongodb:mongo-java-driver:3.0.3'
+
+// libraries for sending emails:
 //    compile files('libs/httpmime-4.1-alpha2.jar')
 //    compile files('libs/activation.jar')
 //    compile files('libs/additionnal.jar')

@@ -10,12 +10,11 @@ public enum  HttpClient
 {
     instance;
 
-    public static final String HOST = DatabaseHelper.ACCOUNT.h();
-    public static final String PORT = DatabaseHelper.ACCOUNT.i();
-    public static final String PROTOCOL = DatabaseHelper.ACCOUNT.k();
-    private static final String BASE_URL = PROTOCOL + "://" + HOST + ":" + PORT;
-
-    private static AsyncHttpClient client = new AsyncHttpClient();
+    private static final String HOST = DatabaseHelper.ACCOUNT.h();
+    private static final String PORT = DatabaseHelper.ACCOUNT.i();
+    private static final String PROTOCOL = DatabaseHelper.ACCOUNT.k();
+    private static final String BASE_URL = PROTOCOL + "://" + HOST + ":" + PORT + "/";
+    private static final AsyncHttpClient client = new AsyncHttpClient();
 
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
         client.get(getAbsoluteUrl(url), params, responseHandler);

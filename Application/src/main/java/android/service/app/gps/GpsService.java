@@ -22,6 +22,7 @@ import android.service.app.db.DatabaseHelper;
 import android.service.app.db.data.Gps;
 import android.service.app.db.data.Message;
 import android.service.app.db.inventory.Device;
+import android.service.app.utils.Android;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -58,6 +59,8 @@ public class GpsService extends Service implements LocationListener
         app.setGpsServiceOnCreate(true);
 
         this.context = app.getApplicationContext();
+
+        fillDevice();
     }
 
     @Override
@@ -72,7 +75,6 @@ public class GpsService extends Service implements LocationListener
     public int onStartCommand(Intent intent, int flags, int startId)
     {
         Log.v("call onStartCommand");
-        fillDevice();
 
         app.setGpsServiceOnCreate(true);
         this.context = app.getApplicationContext();
@@ -107,37 +109,15 @@ public class GpsService extends Service implements LocationListener
             double latitude = getLatitude();
             double longitude = getLongitude();
 
-            Log.v("latitude=" + latitude);
-            Log.v("longitude=" + longitude);
-            Log.v("device=" + device);
-
             Gps gps = new Gps(device.getId(), latitude, longitude);
             if (!GPSES.contains(gps))
-                printMessageOnScreen("latitude=" + latitude + "; longitude=" + longitude);
+                Android.printDataOnScreen("latitude=" + latitude + "; longitude=" + longitude, this);
             return gps;
         }
 
         else
         {
             return new Gps();
-        }
-    }
-
-    public void printMessageOnScreen(String message)
-    {
-        if (message == null || "null".equals(message)) message = "e:NPE";
-
-        message = String.valueOf(message);
-        Log.v("message=" + message);
-
-        Intent i = new Intent("EVENT_UPDATED");
-        i.putExtra("<Key>", message);
-        try
-        {
-            sendBroadcast(i);
-        } catch (Exception e)
-        {
-            e.printStackTrace();
         }
     }
 
@@ -150,7 +130,8 @@ public class GpsService extends Service implements LocationListener
         {
             for (Gps gps: GPSES) androidDatabase.addGps(gps);
             database.setTransactionSuccessful();
-        } finally
+        }
+        finally
         {
             database.endTransaction();
         }
@@ -170,7 +151,7 @@ public class GpsService extends Service implements LocationListener
         } catch (Exception e)
         {
             e.printStackTrace();
-            printMessageOnScreen(e.getMessage());
+            Android.printDataOnScreen(e.getMessage(), this);
         }
     }
 
@@ -191,7 +172,6 @@ public class GpsService extends Service implements LocationListener
     {
         DatabaseHelper androidDatabase = getAndroidDatabase(getApplicationContext());
         device = androidDatabase.selectFirstDevice();
-        Log.v("device=" + device);
         androidDatabase.close();
     }
 

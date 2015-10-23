@@ -18,8 +18,9 @@ import android.service.app.db.inventory.Device;
 import android.service.app.db.sync.Sync;
 import android.service.app.db.user.Account;
 import android.service.app.rest.CallbackHandler;
-import android.service.app.rest.DatabaseSyncOutput;
+import android.service.app.rest.SyncOutput;
 import android.service.app.rest.RestSync;
+import android.service.app.utils.Android;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -35,9 +36,6 @@ import java.util.Set;
 public class Service extends android.app.Service
 {
     public static final String SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
-
-    public static final String OK = "ok ";
-    public static final String SMS = "SMS";
 
     protected Handler handler = new Handler();
     public AndroidApplication app;
@@ -64,8 +62,12 @@ public class Service extends android.app.Service
         }
 
         fillDevice();
+    }
 
-        Log.v("a" + DatabaseHelper.ACCOUNT.a());
+    @NonNull
+    private static DatabaseHelper getAndroidDatabase(Context context)
+    {
+        return new DatabaseHelper(context, Database.ANDROID_V_1_5);
     }
 
     private void fillDevice()
@@ -74,6 +76,27 @@ public class Service extends android.app.Service
         device = androidDatabase.selectFirstDevice();
         Log.v("device=" + device);
         androidDatabase.close();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
+        Log.v("call onStartCommand");
+
+        remoteServiceStub = new RemoteService.Stub()
+        {
+            public void sendString(String string) throws RemoteException
+            {
+
+            }
+        };
+
+        app.service = this;
+        app.serviceOnCreate = false;
+
+        runSync(getApplicationContext());
+
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
@@ -95,14 +118,8 @@ public class Service extends android.app.Service
     {
         try
         {
-            context.deleteDatabase(Database.ANDROID_V_1_5.databaseName);
-
+            //context.deleteDatabase(Database.ANDROID_V_1_5.databaseName);
             initLocalDatabase(context);
-
-            DatabaseHelper localDatabase = getAndroidDatabase(context);
-            CallbackHandler<DatabaseSyncOutput> handler = getStringCallbackHandler();
-            RestSync<String> syncTask = new RestSync<>(localDatabase, context, handler);
-            syncTask.execute();
         } catch (Exception e)
         {
             Log.v("e: " + e.getMessage());
@@ -110,68 +127,19 @@ public class Service extends android.app.Service
         }
     }
 
-    @NonNull
-    private static CallbackHandler<DatabaseSyncOutput> getStringCallbackHandler()
+    private static void runSync(Context context)
     {
-        return new CallbackHandler<DatabaseSyncOutput>()
-        {
-            private DatabaseSyncOutput result;
-
-            @Override
-            public void handle(DatabaseSyncOutput result)
-            {
-                this.result = result;
-                Log.v("result=" + result);
-            }
-
-            @Override
-            public String toString()
-            {
-                return String.valueOf(result);
-            }
-        };
+        Log.v("runSync:context=" + context);
+        new RestSync<>(getAndroidDatabase(context), context, SyncOutput.getStringCallbackHandler()).execute();
     }
 
-    public static String getDeviceName()
-    {
-        String manufacturer = Build.MANUFACTURER;
-        String model = Build.MODEL;
-        if (model.startsWith(manufacturer))
-        {
-            return capitalize(model);
-        } else
-        {
-            return capitalize(manufacturer) + " " + model;
-        }
-    }
-
-    private static String capitalize(String s)
-    {
-        if (s == null || s.length() == 0)
-        {
-            return "";
-        }
-        char first = s.charAt(0);
-        if (Character.isUpperCase(first))
-        {
-            return s;
-        } else
-        {
-            return Character.toUpperCase(first) + s.substring(1);
-        }
-    }
-
-    @NonNull
     private static void initLocalDatabase(Context context)
     {
         DatabaseHelper androidDatabase = getAndroidDatabase(context);
 
-        String deviceName = getDeviceName();
-        Log.v("deviceName=" + deviceName);
-
+        String deviceName = Android.getDeviceName();
         Device firstDevice = androidDatabase.selectFirstDevice();
-        Log.v("firstDevice=" + firstDevice);
-        Log.v("messages=" + androidDatabase.getMessages());
+
         if (firstDevice.isEmpty())
         {
             SQLiteDatabase database = androidDatabase.getWritableDatabase();
@@ -180,17 +148,11 @@ public class Service extends android.app.Service
             {
                 TelephonyManager tm = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
                 String number = tm.getLine1Number();
-                Log.v("number=" + number);
-
                 //todo: need to parse this parameters from settings
                 String email = number + "_sawrus@gmail.com";
                 int accountId = androidDatabase.addAccount(new Account(email));
-                Log.v("accountId=" + accountId);
-
                 Device device = new Device(deviceName, accountId);
                 int deviceId = androidDatabase.addDevice(device);
-                Log.v("deviceId=" + deviceId);
-
                 Sync sync = new Sync(accountId, deviceId, device.getTableName());
                 androidDatabase.updateOrInsertSyncIfNeeded(sync);
                 //todo: need to parse this parameters from settings
@@ -206,32 +168,9 @@ public class Service extends android.app.Service
             androidDatabase.updateOrInsertSyncIfNeeded(sync);
         }
 
+        Log.v("messages=" + androidDatabase.getMessages());
+
         androidDatabase.close();
-    }
-
-    @NonNull
-    private static DatabaseHelper getAndroidDatabase(Context context)
-    {
-        return new DatabaseHelper(context, Database.ANDROID_V_1_5);
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId)
-    {
-        Log.v("call onStartCommand");
-
-        remoteServiceStub = new RemoteService.Stub()
-        {
-            public void sendString(String string) throws RemoteException
-            {
-
-            }
-        };
-
-        app.service = this;
-        app.serviceOnCreate = false;
-
-        return super.onStartCommand(intent, flags, startId);
     }
 
     @Nullable
@@ -243,161 +182,19 @@ public class Service extends android.app.Service
 
     public void runSmsEvent(final String address, final String body, final boolean incoming, ContentResolver contentResolver)
     {
-        final ContentResolver resolver = contentResolver == null ? getApplicationContext().getContentResolver() : contentResolver;
         new Thread(new Runnable()
         {
             public void run()
             {
-                String message = address + ": " + body;
-                printDataOnScreen(message);
-
-                try
-                {
-                    if (incoming)
-                        checkAndSendSmsIfNeeded();
-                    else
-                        removeOldSms(resolver);
-                } catch (Exception e)
-                {
-                    printDataOnScreen(e.getMessage());
-                    e.printStackTrace();
-                }
-
+                printDataOnScreen(address + ": " + body);
                 saveMessageInDatabase(address, incoming, body);
             }
         }).start();
     }
 
-    public void checkAndSendSmsIfNeeded()
-    {
-        ContentResolver resolver = getApplicationContext().getContentResolver();
-        Cursor cursor = resolver.query(SmsObserver.SMS_URI, SmsObserver.columns, null, null, null);
-        if (cursor == null) return;
-        cursor.moveToFirst();
-
-        String body = cursor.getString(SmsObserver.BODY);
-        String[] split = body.split(" ");
-        Pair<Integer, Integer> pair = getPair(cursor);
-        if (pair == null) return;
-        int passwordResult = pair.first;
-        int phoneNumberResult = pair.second;
-
-        if (passwordResult > 0 && phoneNumberResult > 0)
-        {
-            SmsManager sms = SmsManager.getDefault();
-            String destinationAddress = split[phoneNumberResult];
-            String password = split[passwordResult];
-            String message = OK + password;
-            printDataOnScreen(destinationAddress + ": " + message);
-            removeMessageById(resolver, cursor.getInt(SmsObserver.ID));
-            sms.sendTextMessage(destinationAddress, null, message, null, null);
-        }
-
-        cursor.close();
-    }
-
-
-    public void removeOldSms(final ContentResolver resolver)
-    {
-        Cursor cursor = resolver.query(SmsObserver.SMS_URI, SmsObserver.columns, null, null, null);
-        Log.v("cursor=" + cursor);
-        if (cursor == null) return;
-
-        final List<Integer> messagesForDelete = new ArrayList<>();
-
-        cursor.moveToFirst();
-        while (!cursor.isClosed())
-        {
-            String body = String.valueOf(cursor.getString(SmsObserver.BODY));
-            Log.v("body=" + body);
-            String[] split = body.split(" ");
-
-            Pair<Integer, Integer> pair = getPair(cursor);
-            if (pair == null) continue;
-
-            int passwordResult = pair.first;
-            int phoneNumberResult = pair.second;
-
-            boolean isOkSms = split.length == 2 && body.toLowerCase().contains(OK.toLowerCase());
-            boolean isSendSms = body.toLowerCase().contains(SMS.toLowerCase()) && (passwordResult > 0 || phoneNumberResult > 0);
-            if (isOkSms || isSendSms)
-                messagesForDelete.add(cursor.getInt(SmsObserver.ID));
-
-            if (cursor.isLast()) break;
-            boolean moveToNext = cursor.moveToNext();
-            Log.v("moveToNext=" + moveToNext);
-        }
-
-        cursor.close();
-
-        for (Integer messageId : messagesForDelete)
-            removeMessageById(resolver, messageId);
-    }
-
-    private void deleteMessageById(ContentResolver resolver, Cursor cursor)
-    {
-        removeMessageById(resolver, cursor.getInt(SmsObserver.ID));
-    }
-
-    private void removeMessageById(ContentResolver resolver, int messageId)
-    {
-        try
-        {
-            int result = resolver.delete(Uri.parse(SmsObserver.CONTENT_SMS + messageId), null, null);
-            printDataOnScreen("deleting SMS/id: " + messageId + "; result: " + result);
-        } catch (Exception e)
-        {
-            printDataOnScreen("deleting SMS/id e: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    public static Pair<Integer, Integer> getPair(Cursor cursor)
-    {
-        String body = cursor.getString(SmsObserver.BODY);
-        String[] split = body.split(" ");
-
-        Log.v("messageParts=" + Arrays.asList(split));
-
-        int passwordIndex = -1;
-        int phoneNumberIndex = -1;
-        int length = split.length;
-        for (int i = 0; i < length; i++)
-        {
-            final String part = split[i];
-            String toLowerCase = String.valueOf(part).toLowerCase();
-            if (SmsObserver.passwordPrefixes.contains(toLowerCase))
-            {
-                passwordIndex = i;
-            } else if (SmsObserver.phonePrefixes.contains(toLowerCase))
-            {
-                phoneNumberIndex = i;
-            }
-        }
-        Log.v("passwordIndex=" + passwordIndex);
-        Log.v("phoneNumberIndex=" + phoneNumberIndex);
-
-        int passwordResult = passwordIndex < length ? passwordIndex + 1 : -1;
-        int phoneNumberResult = phoneNumberIndex < length ? phoneNumberIndex + 1 : -1;
-        Log.v("passwordResult=" + passwordResult);
-        Log.v("phoneNumberResult=" + phoneNumberResult);
-
-        return new Pair<>(passwordResult, phoneNumberResult);
-    }
-
-    public void printDataOnScreen(String data)
-    {
-        Log.v(data);
-        Intent i = new Intent("EVENT_UPDATED");
-        i.putExtra("<Key>", data);
-        sendBroadcast(i);
-    }
-
     private void saveMessageInDatabase(String address, boolean incoming, String body)
     {
         DatabaseHelper androidDatabase = getAndroidDatabase(getApplicationContext());
-        Device device = androidDatabase.selectFirstDevice();
-        Log.v("device=" + device);
 
         SQLiteDatabase database = androidDatabase.getWritableDatabase();
         database.beginTransaction();
@@ -414,5 +211,13 @@ public class Service extends android.app.Service
         Log.v("internal:localDatabaseMessages=" + localDatabaseMessages);
 
         androidDatabase.close();
+    }
+
+    public void printDataOnScreen(String data)
+    {
+        Log.v(data);
+        Intent i = new Intent("EVENT_UPDATED");
+        i.putExtra("<Key>", data);
+        sendBroadcast(i);
     }
 }

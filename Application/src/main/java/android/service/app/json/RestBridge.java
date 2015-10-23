@@ -16,7 +16,7 @@ import org.json.JSONObject;
 import java.util.Map;
 import java.util.Set;
 
-public class RestBridge implements DataBridge<String, JsonHttpResponseHandler>
+public class RestBridge implements DataBridge<String, RestHttpResponseHandler>
 {
     private final Context context;
 
@@ -32,9 +32,9 @@ public class RestBridge implements DataBridge<String, JsonHttpResponseHandler>
     }
 
     @Override
-    public JsonHttpResponseHandler postMessages(Set<Message> messages)
+    public RestHttpResponseHandler postMessages(Set<Message> messages)
     {
-        JsonHttpResponseHandler responseHandler = null;
+        RestHttpResponseHandler responseHandler = null;
         for (Message message: messages)
         {
             Map<String, Object> data = message.getData();
@@ -42,7 +42,7 @@ public class RestBridge implements DataBridge<String, JsonHttpResponseHandler>
             data.put(Message.DEVICE_ID, message.getDevice().getName());
 
             JSONObject jsonMessage = new JSONObject(data);
-            responseHandler = new JsonHttpResponseHandler();
+            responseHandler = new RestHttpResponseHandler();
             HttpClient.postJson(context, DatabaseHelper.MESSAGE.getTableName(), jsonMessage, responseHandler);
         }
 
@@ -56,7 +56,7 @@ public class RestBridge implements DataBridge<String, JsonHttpResponseHandler>
     }
 
     @Override
-    public JsonHttpResponseHandler postGps(Set<Gps> gpsSets)
+    public RestHttpResponseHandler postGps(Set<Gps> gpsSets)
     {
         return null;
     }
@@ -68,7 +68,7 @@ public class RestBridge implements DataBridge<String, JsonHttpResponseHandler>
     }
 
     @Override
-    public JsonHttpResponseHandler postAccount(Account account)
+    public RestHttpResponseHandler postAccount(Account account)
     {
         return null;
     }
@@ -80,7 +80,7 @@ public class RestBridge implements DataBridge<String, JsonHttpResponseHandler>
     }
 
     @Override
-    public JsonHttpResponseHandler postDevice(Device device)
+    public RestHttpResponseHandler postDevice(Device device)
     {
         return null;
     }

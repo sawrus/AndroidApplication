@@ -8,17 +8,19 @@ import android.service.app.db.DatabaseHelper;
 import android.service.app.db.data.Message;
 import android.service.app.db.sync.Sync;
 import android.service.app.json.RestBridge;
+import android.service.app.utils.Log;
 
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @TargetApi(Build.VERSION_CODES.CUPCAKE)
-public class RestSync<Input> extends AsyncTask<Input, Void, DatabaseSyncOutput>
+public class RestSync<Input> extends AsyncTask<Input, Void, SyncOutput>
 {
     private final DatabaseHelper localDatabase;
-    private final CallbackHandler<DatabaseSyncOutput> handler;
+    private final CallbackHandler<SyncOutput> handler;
     private final RestBridge restBridge;
-    public RestSync(DatabaseHelper localDatabase, Context context, CallbackHandler<DatabaseSyncOutput> handler)
+    public RestSync(DatabaseHelper localDatabase, Context context, CallbackHandler<SyncOutput> handler)
     {
         this.localDatabase = localDatabase;
         this.handler = handler;
@@ -26,8 +28,9 @@ public class RestSync<Input> extends AsyncTask<Input, Void, DatabaseSyncOutput>
     }
 
     @SafeVarargs
-    protected final DatabaseSyncOutput doInBackground(Input... voids)
+    protected final SyncOutput doInBackground(Input... voids)
     {
+        Log.v("RestSync:voids=" + Arrays.toString(voids));
         //todo, you can use the part of implementation from AndroidApplication\Application\src\main\java\android\service\app\db\mongo\MongoClient.java
 
         try
@@ -37,10 +40,10 @@ public class RestSync<Input> extends AsyncTask<Input, Void, DatabaseSyncOutput>
         catch (Exception e)
         {
             e.printStackTrace();
-            return new DatabaseSyncOutput(e.getMessage());
+            return new SyncOutput("e: " + e.getMessage());
         }
 
-        return new DatabaseSyncOutput("success");
+        return new SyncOutput("success");
     }
 
     private void syncMessages()
@@ -48,7 +51,11 @@ public class RestSync<Input> extends AsyncTask<Input, Void, DatabaseSyncOutput>
         Integer accountId = localDatabase.selectFirstDevice().getAccountId();
 
         Set<Message> dataSet = localDatabase.getMessages();
-        if (dataSet.isEmpty()) return;
+        if (dataSet.isEmpty())
+        {
+            Log.v("no messages in local database");
+            return;
+        }
 
         String tableName = DatabaseHelper.MESSAGE.getTableName();
         Sync sync = localDatabase.selectSyncByTableName(tableName);
@@ -67,12 +74,14 @@ public class RestSync<Input> extends AsyncTask<Input, Void, DatabaseSyncOutput>
             }
         }
 
+        Log.v("newDataSet=" + newDataSet);
+
         restBridge.postMessages(newDataSet);
         localDatabase.updateOrInsertSyncIfNeeded(new Sync(accountId, newSyncId, tableName));
     }
 
     @Override
-    protected void onPostExecute(DatabaseSyncOutput result)
+    protected void onPostExecute(SyncOutput result)
     {
         handler.handle(result);
     }

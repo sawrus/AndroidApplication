@@ -103,7 +103,7 @@ public class Message extends Data
 
         if (cursor.getCount() > 0)
         {
-            this.device = DatabaseHelper.DEVICE.selectFirstDevice(database);
+            final Device device = DatabaseHelper.DEVICE.selectFirstDevice(database);
 
             cursor.moveToFirst();
 
@@ -116,7 +116,7 @@ public class Message extends Data
                 message.setData(cursor.getString(cursor.getColumnIndex(DATA)));
                 message.setDate(cursor.getString(cursor.getColumnIndex(DATE)));
                 message.setDeviceId(cursor.getInt(cursor.getColumnIndex(DEVICE_ID)));
-
+                message.setDevice(device);
                 messages.add(message);
                 Log.v("message=" + message + "; cursor=" + cursor);
                 if (!cursor.isLast()) cursor.moveToNext();
@@ -162,6 +162,11 @@ public class Message extends Data
     public void setDeviceId(int device_id)
     {
         this.device_id = device_id;
+    }
+
+    public void setDevice(Device device)
+    {
+        this.device = device;
     }
 
     public void setDate(String date)

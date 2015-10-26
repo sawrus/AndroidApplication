@@ -17,7 +17,7 @@ orion:
   messages:
     :columns:
       - _id: TEXT
-      - address: TEXT
+      - phone: TEXT
       - incoming: BOOLEAN
       - data: TEXT
       - date: TIMESTAMP 

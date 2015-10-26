@@ -1,27 +1,22 @@
 package android.service.app.db.user;
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.service.app.db.Data;
+import android.service.app.db.DatabaseHelper;
 import android.support.annotation.NonNull;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Account extends Data
+public class Account extends Data<Account>
 {
-    private int id = -1;
     private String email = "";
 
     private static final String table_name = "account";
-    public static final String ID = "id";
     public static final String EMAIL = "email";
     private static final Map<String, String> fields = new LinkedHashMap<String, String>(){
-        {put(ID, INTEGER_PRIMARY_KEY);}
         {put(EMAIL, TEXT);}
     };
 
@@ -51,65 +46,42 @@ public class Account extends Data
 
     public Map<String, Object> getData()
     {
+        final Map<String, Object> data = super.getData();
         return new LinkedHashMap<String, Object>()
         {
             {put(EMAIL, getEmail());}
+            {putAll(data);}
         };
     }
 
-    public Account selectAccount(SQLiteDatabase database, String fieldFilter, Object valueFilter)
-    {
-        return fillAccountFromCursor(select(database, fieldFilter, valueFilter));
-    }
-
-    public Account selectFirstAccount(SQLiteDatabase database)
-    {
-        return fillAccountFromCursor(selectAll(database));
-    }
-
     @NonNull
-    private Account fillAccountFromCursor(Cursor cursor)
+    public Account getDataFromCursor(Cursor cursor)
     {
-        int idIndex = cursor.getColumnIndex(ID);
-        if (cursor.getCount() > 0)
-        {
-            cursor.moveToFirst();
-
-            Account account = new Account();
-            account.setId(cursor.getInt(idIndex));
-            account.setEmail(cursor.getString(cursor.getColumnIndex(EMAIL)));
-            return account;
-        }
-
-        return new Account();
+        Account data = new Account();
+        data.setEmail(cursor.getString(cursor.getColumnIndex(EMAIL)));
+        fillGenericByCursor(data, cursor);
+        return data;
     }
 
-    public Account(){}
+    @Override
+    protected Account emptyData()
+    {
+        return DatabaseHelper.ACCOUNT;
+    }
+
+    public Account()
+    {
+        super();
+    }
 
     public Account(String email)
     {
         this.email = email;
     }
 
-    public Account(int id, String email)
-    {
-        this.id = id;
-        this.email = email;
-    }
-
-    public void setId(int id)
-    {
-        this.id = id;
-    }
-
     public void setEmail(String email)
     {
         this.email = email;
-    }
-
-    public int getId()
-    {
-        return id;
     }
 
     public String getEmail()
@@ -121,8 +93,28 @@ public class Account extends Data
     public String toString()
     {
         return "Account{" +
-                "id=" + id +
-                ", email='" + email + '\'' +
-                '}';
+                "email='" + email + '\'' +
+                '}' + " - " + super.toString();
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        Account account = (Account) o;
+
+        return getEmail().equals(account.getEmail());
+
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = super.hashCode();
+        result = 31 * result + getEmail().hashCode();
+        return result;
     }
 }

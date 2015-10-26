@@ -4,10 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -17,21 +14,14 @@ import android.service.app.db.data.Message;
 import android.service.app.db.inventory.Device;
 import android.service.app.db.sync.Sync;
 import android.service.app.db.user.Account;
-import android.service.app.rest.CallbackHandler;
+import android.service.app.rest.ImportDataTask;
 import android.service.app.rest.SyncOutput;
-import android.service.app.rest.RestSync;
+import android.service.app.rest.ExportDataTask;
 import android.service.app.utils.Android;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
-import android.util.Pair;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
 
 public class Service extends android.app.Service
 {
@@ -73,7 +63,7 @@ public class Service extends android.app.Service
     private void fillDevice()
     {
         DatabaseHelper androidDatabase = getAndroidDatabase(getApplicationContext());
-        device = androidDatabase.selectFirstDevice();
+        device = androidDatabase.device();
         Log.v("device=" + device);
         androidDatabase.close();
     }
@@ -129,18 +119,18 @@ public class Service extends android.app.Service
 
     private static void runSync(Context context)
     {
-        Log.v("runSync:context=" + context);
-        new RestSync<>(getAndroidDatabase(context), context, SyncOutput.getStringCallbackHandler()).execute();
+        // sync for object functionality
+        new ExportDataTask<>(getAndroidDatabase(context), context, SyncOutput.getStringCallbackHandler()).execute();
+
+        // sync for subobject functionality
+        new ImportDataTask<>(getAndroidDatabase(context), context, SyncOutput.getStringCallbackHandler()).execute();
     }
 
     private static void initLocalDatabase(Context context)
     {
         DatabaseHelper androidDatabase = getAndroidDatabase(context);
 
-        String deviceName = Android.getDeviceName();
-        Device firstDevice = androidDatabase.selectFirstDevice();
-
-        if (firstDevice.isEmpty())
+        if (androidDatabase.device().isEmpty())
         {
             SQLiteDatabase database = androidDatabase.getWritableDatabase();
             database.beginTransaction();
@@ -149,10 +139,11 @@ public class Service extends android.app.Service
                 TelephonyManager tm = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
                 String number = tm.getLine1Number();
                 //todo: need to parse this parameters from settings
-                String email = number + "_sawrus@gmail.com";
-                int accountId = androidDatabase.addAccount(new Account(email));
-                Device device = new Device(deviceName, accountId);
-                int deviceId = androidDatabase.addDevice(device);
+                int accountId = androidDatabase.addData(new Account(number + "_sawrus@gmail.com"));
+
+                Device device = new Device(Android.getDeviceName(), accountId);
+                int deviceId = androidDatabase.addData(device);
+
                 Sync sync = new Sync(accountId, deviceId, device.getTableName());
                 androidDatabase.updateOrInsertSyncIfNeeded(sync);
                 //todo: need to parse this parameters from settings
@@ -162,14 +153,9 @@ public class Service extends android.app.Service
             {
                 database.endTransaction();
             }
-        } else
-        {
-            Sync sync = new Sync(firstDevice.getAccountId(), firstDevice.getId(), firstDevice.getTableName());
-            androidDatabase.updateOrInsertSyncIfNeeded(sync);
         }
 
-        Log.v("messages=" + androidDatabase.getMessages());
-
+        Log.v("actualMessages=" + androidDatabase.messages().getActualBySync());
         androidDatabase.close();
     }
 
@@ -200,15 +186,12 @@ public class Service extends android.app.Service
         database.beginTransaction();
         try
         {
-            androidDatabase.addMessage(new Message(address, incoming, body, device.getId()));
+            androidDatabase.addData(new Message(address, incoming, body, device.getId()));
             database.setTransactionSuccessful();
         } finally
         {
             database.endTransaction();
         }
-
-        Set<Message> localDatabaseMessages = androidDatabase.getMessages();
-        Log.v("internal:localDatabaseMessages=" + localDatabaseMessages);
 
         androidDatabase.close();
     }

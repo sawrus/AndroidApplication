@@ -1,7 +1,6 @@
 package android.service.app.db;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.service.app.db.data.Gps;
@@ -10,8 +9,6 @@ import android.service.app.db.inventory.Device;
 import android.service.app.db.sync.Sync;
 import android.service.app.db.user.Account;
 import android.service.app.utils.Log;
-
-import java.util.Set;
 
 public class DatabaseHelper extends SQLiteOpenHelper
 {
@@ -28,54 +25,56 @@ public class DatabaseHelper extends SQLiteOpenHelper
         this.database = database;
     }
 
-    public int addAccount(Account data)
+    public <T extends Data> int addData(T data)
     {
         return Integer.valueOf(String.valueOf(data.insert(getWritableDatabase())));
     }
 
-    public int addDevice(Device data)
+    public <T extends Data> T wrapForRead(T data)
     {
-        return Integer.valueOf(String.valueOf(data.insert(getWritableDatabase())));
+       return (T) data.setReadableDatabase(getReadableDatabase());
     }
 
-    public int addMessage(Message data)
+    private  <T extends Data> T wrapForWrite(T data)
     {
-        return Integer.valueOf(String.valueOf(data.insert(getWritableDatabase())));
+        wrapForRead(data);
+        data.setWritableDatabase(getWritableDatabase());
+        return data;
     }
 
-    public int addSync(Sync data)
+    public Device devices()
     {
-        return Integer.valueOf(String.valueOf(data.insert(getWritableDatabase())));
+        return wrapForWrite(DEVICE);
     }
 
-    public int addGps(Gps data)
+    public Device device()
     {
-        return Integer.valueOf(String.valueOf(data.insert(getWritableDatabase())));
+        return devices().getFirst();
     }
 
-    public Device selectFirstDevice()
+    private Account accounts()
     {
-        return DEVICE.selectFirstDevice(getReadableDatabase());
+        return wrapForWrite(ACCOUNT);
     }
 
-    public Account selectFirstAccount()
+    public Account account()
     {
-        return ACCOUNT.selectFirstAccount(getReadableDatabase());
+        return accounts().getFirst();
     }
 
-    public Set<Message> getMessages()
+    public Message messages()
     {
-        return MESSAGE.selectAllMessages(getReadableDatabase());
+        return wrapForWrite(MESSAGE);
     }
 
-    public Set<Gps> getGpsSet()
+    public Sync sync_points()
     {
-        return GPS.selectAllGps(getReadableDatabase());
+        return wrapForWrite(SYNC);
     }
 
-    public Set<Sync> getSyncSet()
+    public Gps coordinates()
     {
-        return SYNC.selectAllSync(getReadableDatabase());
+        return wrapForWrite(GPS);
     }
 
     public void updateOrInsertSyncIfNeeded(Sync newSync)
@@ -85,9 +84,9 @@ public class DatabaseHelper extends SQLiteOpenHelper
 
         try
         {
-            Sync sync = selectSyncByTableName(newSync.getTable());
+            Sync sync = getSyncByTableName(newSync.getTable());
             if (sync.isEmpty())
-                addSync(newSync);
+                addData(newSync);
             else
                 updateSync(sync, newSync);
 
@@ -97,7 +96,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
             database.endTransaction();
         }
 
-        Log.v("updateOrInsertSyncIfNeeded:syncSet=" + getSyncSet());
+        Log.v("sync_points=" + sync_points().getAll());
     }
 
     private void updateSync(Sync sync, Sync newSync)
@@ -105,9 +104,9 @@ public class DatabaseHelper extends SQLiteOpenHelper
         SYNC.update(getWritableDatabase(), sync, newSync);
     }
 
-    public Sync selectSyncByTableName(String tableName)
+    public Sync getSyncByTableName(String tableName)
     {
-        return SYNC.selectSync(getReadableDatabase(), Sync.TABLE, tableName);
+        return SYNC.filterBy(Sync.TABLE, tableName);
     }
 
     @Override

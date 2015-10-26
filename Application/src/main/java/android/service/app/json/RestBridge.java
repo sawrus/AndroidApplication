@@ -13,10 +13,12 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.json.JSONObject;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class RestBridge implements DataBridge<String, RestHttpResponseHandler>
+public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandler>
 {
     private final Context context;
 
@@ -26,57 +28,65 @@ public class RestBridge implements DataBridge<String, RestHttpResponseHandler>
     }
 
     @Override
-    public Set<Message> getMessages(String s)
+    public Set<Message> getMessages(DataFilter s)
     {
-        return null;
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Set<Gps> getCoordinates(DataFilter s)
+    {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Account getAccount(DataFilter s)
+    {
+        return new Account();
+    }
+
+    @Override
+    public Set<Device> getDevices(DataFilter s)
+    {
+        return Collections.emptySet();
     }
 
     @Override
     public RestHttpResponseHandler postMessages(Set<Message> messages)
     {
         RestHttpResponseHandler responseHandler = null;
+        Set<JSONObject> jsonObjects = new LinkedHashSet<>();
         for (Message message: messages)
         {
             Map<String, Object> data = message.getData();
             //todo: need to refactor
             data.put(Message.DEVICE_ID, message.getDevice().getName());
 
-            JSONObject jsonObject = new JSONObject(data);
+            jsonObjects.add(new JSONObject(data));
             responseHandler = new RestHttpResponseHandler();
-            HttpClient.postJson(context, DatabaseHelper.MESSAGE.getTableName(), jsonObject, responseHandler);
         }
 
+        HttpClient.postJson(context, DatabaseHelper.MESSAGE.getTableName(), jsonObjects, responseHandler);
         return responseHandler;
-    }
-
-    @Override
-    public Set<Gps> getGps(String s)
-    {
-        return null;
     }
 
     @Override
     public RestHttpResponseHandler postGps(Set<Gps> gpsSets)
     {
         RestHttpResponseHandler responseHandler = null;
+        Set<JSONObject> jsonObjects = new LinkedHashSet<>();
         for (Gps gps: gpsSets)
         {
             Map<String, Object> data = gps.getData();
             //todo: need to refactor
             data.put(Message.DEVICE_ID, gps.getDevice().getName());
 
-            JSONObject jsonObject = new JSONObject(data);
+            jsonObjects.add(new JSONObject(data));
             responseHandler = new RestHttpResponseHandler();
-            HttpClient.postJson(context, DatabaseHelper.GPS.getTableName(), jsonObject, responseHandler);
         }
 
+        HttpClient.postJson(context, DatabaseHelper.GPS.getTableName(), jsonObjects, responseHandler);
         return responseHandler;
-    }
-
-    @Override
-    public Account getAccount(String s)
-    {
-        return null;
     }
 
     @Override
@@ -87,12 +97,6 @@ public class RestBridge implements DataBridge<String, RestHttpResponseHandler>
         RestHttpResponseHandler responseHandler = new RestHttpResponseHandler();
         HttpClient.postJson(context, DatabaseHelper.ACCOUNT.getTableName(), jsonObject, responseHandler);
         return responseHandler;
-    }
-
-    @Override
-    public Device getDevice(String s)
-    {
-        return null;
     }
 
     @Override

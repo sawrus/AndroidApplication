@@ -12,12 +12,12 @@ public interface DataBridge<Criteria, ResponseHandler>
     Set<Message> getMessages(Criteria criteria);
     ResponseHandler postMessages(Set<Message> messages);
 
-    Set<Gps> getGps(Criteria criteria);
+    Set<Gps> getCoordinates(Criteria criteria);
     ResponseHandler postGps(Set<Gps> gpsSets);
 
     Account getAccount(Criteria criteria);
     ResponseHandler postAccount(Account account);
 
-    Device getDevice(Criteria criteria);
+    Set<Device> getDevices(Criteria criteria);
     ResponseHandler postDevice(Device device);
 }

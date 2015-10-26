@@ -5,27 +5,22 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.service.app.db.Data;
 import android.service.app.db.DatabaseHelper;
+import android.service.app.db.DeviceDependable;
 import android.service.app.db.inventory.Device;
-import android.service.app.utils.Log;
-import android.view.DragEvent;
+import android.support.annotation.NonNull;
 
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class Gps extends Data
+public class Gps extends Data<Gps> implements DeviceDependable
 {
-    private int id = -1;
     private int device_id = -3;
     private double latitude = -3;
     private double longitude = -3;
-    private String date = "";
     private Device device = new Device();
 
     private static final String table_name = "gps";
-    public static final String ID = "id";
-    public static final String DATE = "date";
     public static final String DEVICE_ID = "device_id";
     public static final String LATITUDE = "latitude";
     public static final String LONGITUDE = "longitude";
@@ -33,18 +28,17 @@ public class Gps extends Data
         {put(ID, INTEGER_PRIMARY_KEY);}
         {put(LATITUDE, DOUBLE);}
         {put(LONGITUDE, DOUBLE);}
-        {put(DATE, DATETIME);}
         {put(DEVICE_ID, INTEGER);}
     };
 
     public Gps()
     {
+        super();
     }
 
     public Gps(int device_id, double latitude, double longitude)
     {
         this.device_id = device_id;
-        this.date = getDateTime();
         this.latitude = latitude;
         this.longitude = longitude;
     }
@@ -83,20 +77,9 @@ public class Gps extends Data
         return table_name;
     }
 
-    @Override
-    public int getId()
-    {
-        return id;
-    }
-
     public int getDeviceId()
     {
         return device_id;
-    }
-
-    public String getDate()
-    {
-        return date;
     }
 
     public double getLatitude()
@@ -114,11 +97,6 @@ public class Gps extends Data
         this.device_id = device_id;
     }
 
-    public void setDate(String date)
-    {
-        this.date = date;
-    }
-
     public void setLatitude(double latitude)
     {
         this.latitude = latitude;
@@ -129,74 +107,46 @@ public class Gps extends Data
         this.longitude = longitude;
     }
 
-    public void setId(int id)
-    {
-        this.id = id;
-    }
-
     @Override
     public Map<String, Object> getData()
     {
+        final Map<String, Object> data = super.getData();
         return new LinkedHashMap<String, Object>()
         {
             {put(LATITUDE, getLatitude());}
             {put(LONGITUDE, getLongitude());}
-            {put(DATE, getDate());}
             {put(DEVICE_ID, getDeviceId());}
+            {putAll(data);}
         };
     }
 
-    public Set<Gps> selectAllGps(SQLiteDatabase database)
+    @NonNull
+    public Gps getDataFromCursor(Cursor cursor)
     {
-        Cursor cursor = selectAll(database);
-        Set<Gps> gpsSet = new LinkedHashSet<>();
-
-        if (cursor.getCount() > 0)
-        {
-            final Device device = DatabaseHelper.DEVICE.selectFirstDevice(database);
-            cursor.moveToFirst();
-
-            do
-            {
-                Gps gps = new Gps();
-                gps.setId(cursor.getInt(cursor.getColumnIndex(ID)));
-                gps.setDate(cursor.getString(cursor.getColumnIndex(DATE)));
-                gps.setDeviceId(cursor.getInt(cursor.getColumnIndex(DEVICE_ID)));
-                gps.setLongitude(cursor.getDouble(cursor.getColumnIndex(LONGITUDE)));
-                gps.setLatitude(cursor.getDouble(cursor.getColumnIndex(LATITUDE)));
-                gps.setDevice(device);
-
-                gpsSet.add(gps);
-                Log.v("gps=" + gps + "; cursor=" + cursor);
-                if (!cursor.isLast()) cursor.moveToNext();
-                else break;
-            } while (!cursor.isClosed());
-        }
-
-        return gpsSet;
+        Gps data = new Gps();
+        data.setId(cursor.getInt(cursor.getColumnIndex(ID)));
+        data.setDeviceId(cursor.getInt(cursor.getColumnIndex(DEVICE_ID)));
+        data.setLongitude(cursor.getDouble(cursor.getColumnIndex(LONGITUDE)));
+        data.setLatitude(cursor.getDouble(cursor.getColumnIndex(LATITUDE)));
+        fillGenericByCursor(data, cursor);
+        return data;
     }
 
     @Override
-    public Object insert(SQLiteDatabase database)
+    protected Gps emptyData()
     {
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(LATITUDE, getLatitude());
-        contentValues.put(LONGITUDE, getLongitude());
-        contentValues.put(DATE, getDate());
-        contentValues.put(DEVICE_ID, getDeviceId());
-        return insert(database, table_name, contentValues);
+        return DatabaseHelper.GPS;
     }
 
     @Override
     public String toString()
     {
         return "Gps{" +
-                "id=" + id +
-                ", device_id=" + device_id +
-                ", date='" + date + '\'' +
+                "device_id=" + device_id +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
-                '}';
+                ", device=" + device +
+                '}' + " - " + super.toString();
     }
 
     @Override
@@ -204,23 +154,21 @@ public class Gps extends Data
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
 
         Gps gps = (Gps) o;
 
-        if (getId() != gps.getId()) return false;
         if (device_id != gps.device_id) return false;
         if (Double.compare(gps.getLatitude(), getLatitude()) != 0) return false;
-        if (Double.compare(gps.getLongitude(), getLongitude()) != 0) return false;
+        return Double.compare(gps.getLongitude(), getLongitude()) == 0;
 
-        return true;
     }
 
     @Override
     public int hashCode()
     {
-        int result;
+        int result = super.hashCode();
         long temp;
-        result = getId();
         result = 31 * result + device_id;
         temp = Double.doubleToLongBits(getLatitude());
         result = 31 * result + (int) (temp ^ (temp >>> 32));

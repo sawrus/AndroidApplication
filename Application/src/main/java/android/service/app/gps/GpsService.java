@@ -128,16 +128,13 @@ public class GpsService extends Service implements LocationListener
         database.beginTransaction();
         try
         {
-            for (Gps gps: GPSES) androidDatabase.addGps(gps);
+            for (Gps gps: GPSES) androidDatabase.addData(gps);
             database.setTransactionSuccessful();
         }
         finally
         {
             database.endTransaction();
         }
-
-        Set<Message> localDatabaseMessages = androidDatabase.getMessages();
-        Log.v("internal:localDatabaseMessages=" + localDatabaseMessages);
 
         androidDatabase.close();
     }
@@ -171,7 +168,7 @@ public class GpsService extends Service implements LocationListener
     private void fillDevice()
     {
         DatabaseHelper androidDatabase = getAndroidDatabase(getApplicationContext());
-        device = androidDatabase.selectFirstDevice();
+        device = androidDatabase.device();
         androidDatabase.close();
     }
 

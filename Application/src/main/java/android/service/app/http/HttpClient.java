@@ -12,6 +12,7 @@ import com.loopj.android.http.SyncHttpClient;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Set;
 
 import cz.msebera.android.httpclient.entity.StringEntity;
 
@@ -36,6 +37,18 @@ public enum  HttpClient
     }
 
     public static void postJson(Context context, String url, JSONObject data, AsyncHttpResponseHandler responseHandler)
+    {
+        try
+        {
+            String contentType = RequestParams.APPLICATION_JSON + "; " + CHARSET;
+            getClient().post(context, getAbsoluteUrl(url), new StringEntity(String.valueOf(data)), contentType, responseHandler);
+        } catch (UnsupportedEncodingException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void postJson(Context context, String url, Set<JSONObject> data, AsyncHttpResponseHandler responseHandler)
     {
         try
         {

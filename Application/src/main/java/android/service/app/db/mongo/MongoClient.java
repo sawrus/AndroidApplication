@@ -216,7 +216,7 @@
 //
 //    private static void syncAll(DatabaseHelper localDatabase, MongoDatabase externalDatabase)
 //    {
-//        Account account = localDatabase.selectFirstAccount();
+//        Account account = localDatabase.getAccount();
 //        Log.v("account=" + account);
 //
 //        Set<Sync> syncSet = localDatabase.getSyncSet();
@@ -260,7 +260,7 @@
 //    @Nullable
 //    private static Device registerAccountAndDeviceIfNeeded(DatabaseHelper localDatabase, MongoDatabase externalDatabase)
 //    {
-//        Account firstAccount = localDatabase.selectFirstAccount();
+//        Account firstAccount = localDatabase.getAccount();
 //        Log.v("firstAccount=" + firstAccount);
 //        if (!firstAccount.isEmpty())
 //        {
@@ -279,7 +279,7 @@
 //            return null;
 //        }
 //
-//        Device firstDevice = localDatabase.selectFirstDevice();
+//        Device firstDevice = localDatabase.getDevice();
 //        Log.v("firstDevice=" + firstDevice);
 //        if (!firstDevice.isEmpty())
 //        {

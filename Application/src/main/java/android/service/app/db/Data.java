@@ -348,7 +348,7 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
     {
         String script = selectColumnsQueryPart();
         String tableName = getTableName();
-        script += " LEFT JOIN sync WHERE sync.table_name=\'" + tableName + "\' AND " + tableName + ".id > sync.sync_id";
+        script += " LEFT JOIN sync ON sync.table_name=\'" + tableName + "\' AND " + tableName + ".id > sync.sync_id";
         //script += " WHERE " + tableName + ".id "+ MORE_THAN + " (select sync.sync_id from sync where table_name=\'" + tableName + "\')";
         if (Log.isInfoEnabled()) Log.info("script=" + script);
         return database.rawQuery(script, null);

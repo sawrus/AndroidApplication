@@ -2,8 +2,6 @@ package android.service.app.db;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.service.app.db.sync.GenericSync;
-import android.service.app.db.sync.impl.Sync;
-import android.service.app.db.user.Account;
 import android.service.app.db.user.GenericAccount;
 
 import java.util.Map;

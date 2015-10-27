@@ -4,8 +4,6 @@ var assert = require('assert');
 
 const LISTEN_PORT=9900;
 
-mongo.connectToServer();
-
 var server = http.createServer(handleRequest).listen(
     LISTEN_PORT,
     function(){
@@ -47,17 +45,25 @@ function storeData(request, response, collection) {
         data += chunk;
     });
     request.on('end', function () {
-        // store to DB
         var obj = JSON.parse(data);
-        mongo.getDb().collection(collection).insert(obj, {'ordered' : false}, function callback(err, doc) {
-            if (err) {
-                console.log("Error while adding to " + collection + ": " + err);
-            }
-        });
-        // empty 200 OK response for now
-        response.writeHead(200, "OK", {'Content-Type': 'text/html'});
-        response.end();
+        mongo.get(function(db) {
+            // store to DB
+            db.collection(collection).insert(obj, {'ordered' : false}, function callback(err, doc) {
+                if (err) {
+                    console.log("Error while adding to " + collection + ": " + err);
+                } else {
+                    // empty 200 OK response for now
+                    response.writeHead(200, "OK", {'Content-Type': 'text/html'});
+                    response.end();
+                }
+            });
+        })
+
     });
+}
+
+function getData() {
+
 }
 
 function isPost(request) {

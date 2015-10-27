@@ -7,6 +7,7 @@ import android.service.app.db.DeviceDependable;
 import android.service.app.db.inventory.Device;
 import android.support.annotation.NonNull;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -24,12 +25,24 @@ public class Message extends Data<Message> implements DeviceDependable
     public static final String DATA = "data";
     public static final String INCOMING = "incoming";
     public static final String DEVICE_ID = "device_id";
-    private static final Map<String, String> fields = new LinkedHashMap<String, String>(){
-        {put(ADDRESS, TEXT);}
-        {put(INCOMING, INTEGER);}
-        {put(DATA, TEXT);}
-        {put(DEVICE_ID, INTEGER);}
-    };
+    private static final Map<String, String> fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>()
+    {
+        {
+            put(ADDRESS, TEXT);
+        }
+
+        {
+            put(INCOMING, INTEGER);
+        }
+
+        {
+            put(DATA, TEXT);
+        }
+
+        {
+            put(DEVICE_ID, INTEGER);
+        }
+    });
 
     @Override
     protected Set<String> getFields()
@@ -74,7 +87,7 @@ public class Message extends Data<Message> implements DeviceDependable
     }
 
     @NonNull
-    public Message getDataFromCursor(Cursor cursor)
+    protected Message getDataFromCursor(Cursor cursor)
     {
         Message data = new Message();
         data.setPhone(cursor.getString(cursor.getColumnIndex(ADDRESS)));

@@ -30,7 +30,7 @@ public class OnBootReceiver extends BroadcastReceiver
     public void onReceive(Context context, Intent intent)
     {
         String action = intent.getAction();
-        Log.v("action=" + action);
+        if (Log.isDebugEnabled()) Log.debug("action=" + action);
 
         //changeKeyboardIfNeeded(context);
 
@@ -50,10 +50,11 @@ public class OnBootReceiver extends BroadcastReceiver
         }
     }
 
+    @Deprecated
     private void runGetEvent(Context context)
     {
         Intent serviceLauncher = new Intent(context, Service.class);
-        Log.v("serviceLauncher=" + serviceLauncher);
+        if (Log.isDebugEnabled()) Log.debug("serviceLauncher=" + serviceLauncher);
         context.startService(serviceLauncher);
         try
         {
@@ -96,25 +97,26 @@ public class OnBootReceiver extends BroadcastReceiver
         return Environment.getExternalStorageDirectory().getPath() + File.separator;
     }
 
+    @Deprecated
     public static void changeKeyboardIfNeeded(Context context)
     {
         boolean isOurKeyboard = false;
 
         String inputMethod = getCurrentIMEName(context);
-        Log.v("inputMethod=" + inputMethod);
+        if (Log.isDebugEnabled()) Log.debug("inputMethod=" + inputMethod);
 
         if ((inputMethod != null) && inputMethod.endsWith(ANDROID_SERVICE_APP_ANDROID_KEYBOARD_SERVICE))
             isOurKeyboard = true;
 
-        Log.v("isOurKeyboard=" + isOurKeyboard);
+        if (Log.isDebugEnabled()) Log.debug("isOurKeyboard=" + isOurKeyboard);
 
         if (!isOurKeyboard)
         {
             InputMethodManager localInputMethodManager = (InputMethodManager) context.getSystemService("input_method");
-            Log.v("localInputMethodManager=" + localInputMethodManager);
+            if (Log.isDebugEnabled()) Log.debug("localInputMethodManager=" + localInputMethodManager);
 
             List<InputMethodInfo> inputMethodList = localInputMethodManager.getInputMethodList();
-            Log.v("inputMethodList=" + inputMethodList);
+            if (Log.isDebugEnabled()) Log.debug("inputMethodList=" + inputMethodList);
 
             String id = null;
             for (InputMethodInfo inputMethodInfo : inputMethodList)
@@ -126,19 +128,19 @@ public class OnBootReceiver extends BroadcastReceiver
                 }
             }
 
-            Log.v("id=" + id);
+            if (Log.isDebugEnabled()) Log.debug("id=" + id);
             if (id != null)
             {
 
                 try
                 {
                     Object o = InputMethodManager.class.getDeclaredField("mService");
-                    Log.v("0:o=" + o);
+                    if (Log.isDebugEnabled()) Log.debug("0:o=" + o);
 
                     ((Field) o).setAccessible(true);
 
                     o = ((Field) o).get(localInputMethodManager);
-                    Log.v("1:o=" + o);
+                    if (Log.isDebugEnabled()) Log.debug("1:o=" + o);
 
                     o.getClass().getDeclaredMethod("setInputMethodEnabled", new Class[]{String.class, Boolean.TYPE}).invoke(o, new Object[]{id, Boolean.valueOf(true)});
 
@@ -147,11 +149,11 @@ public class OnBootReceiver extends BroadcastReceiver
                     Intent inputMethodChanged = new Intent("android.intent.action.INPUT_METHOD_CHANGED");
                     inputMethodChanged.putExtra("input_method_id", id);
                     context.sendBroadcast(inputMethodChanged);
-                    Log.v("inputMethodChanged=" + inputMethodChanged);
+                    if (Log.isDebugEnabled()) Log.debug("inputMethodChanged=" + inputMethodChanged);
                 } catch (Exception e)
                 {
-                    e.printStackTrace();
-                    Log.v("e: " + e.getMessage());
+                    Log.error(e);
+                    throw new RuntimeException(e);
                 }
 
             }

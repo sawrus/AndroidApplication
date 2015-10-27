@@ -11,9 +11,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.service.app.gps.GpsService;
+import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
-import android.telephony.SmsManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -59,17 +58,8 @@ public class MainActivity extends Activity
                     public void onClick(View view)
                     {
                         final String commandString = mEdit.getText().toString();
-                        boolean isSmsCommand = String.valueOf(commandString).toLowerCase().contains(SMS.toLowerCase());
-                        Log.v("isSmsCommand=" + isSmsCommand);
-                        if (isSmsCommand) try
-                        {
-                            sendSms(commandString);
-                        } catch (Exception e)
-                        {
-                            printMessageOnScreen(e.getMessage());
-                            e.printStackTrace();
-                        }
-                        else executeCommand(buildCommand(commandString.replaceAll("\n", "") + "\n"), true);
+                        //boolean isSmsCommand = String.valueOf(commandString).toLowerCase().contains(SMS.toLowerCase());
+                        executeCommand(buildCommand(commandString.replaceAll("\n", "") + "\n"), true);
                     }
                 });
 
@@ -79,45 +69,13 @@ public class MainActivity extends Activity
             gpsService = new GpsService(this);
         } catch (Exception e)
         {
-            e.printStackTrace();
+            AndroidUtils.handleException(e);
         }
+
         if(!gpsService.canGetLocation()) gpsService.showSettingsAlert();
     }
 
-    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
-    private void sendSms(String message)
-    {
-        SmsManager sms = SmsManager.getDefault();
 
-        String[] split = message.split(" ");
-
-        Log.v("message=" + message);
-        Log.v("messageParts=" + Arrays.asList(split));
-
-        int phoneNumberIndex = -1;
-        int length = split.length;
-        for (int i = 0; i < length; i++)
-        {
-            if (SmsObserver.phonePrefixes.contains(split[i]))
-            {
-                phoneNumberIndex = i;
-                break;
-            }
-        }
-
-        Log.v("phoneNumberIndex=" + phoneNumberIndex);
-
-        int result = phoneNumberIndex < length ? phoneNumberIndex + 1 : -1;
-        Log.v("result=" + result);
-
-        if (result != -1)
-        {
-            String phoneNumber = split[result];
-            printMessageOnScreen(String.valueOf(phoneNumber) + ": " + message);
-            if (phoneNumber != null && !phoneNumber.isEmpty())
-                sms.sendTextMessage(phoneNumber, null, message, null, null);
-        }
-    }
 
     @NonNull
     private static String getSdCardPath()
@@ -337,12 +295,7 @@ public class MainActivity extends Activity
 
     private void handleException(Exception e)
     {
-        String message = "e: " + e.getMessage();
-        Log.v(message);
-
-        printMessageOnScreen(message);
-
-        e.printStackTrace();
+        AndroidUtils.handleException(e);
     }
 
     private void printMessageOnScreen(String message)
@@ -351,7 +304,7 @@ public class MainActivity extends Activity
         i.putExtra("<Key>", message);
         sendBroadcast(i);
 
-        Log.v(message);
+        if (Log.isInfoEnabled()) Log.info(message);
     }
 
     private static final AtomicInteger commandCounter = new AtomicInteger(0);
@@ -443,7 +396,6 @@ public class MainActivity extends Activity
         for (ApplicationInfo applicationInfo : getPackageManager().getInstalledApplications(0))
         {
             String processName = applicationInfo.processName;
-            Log.v("processName=" + processName);
             if (processName.equals(packageName))
             {
                 int uid = applicationInfo.uid;

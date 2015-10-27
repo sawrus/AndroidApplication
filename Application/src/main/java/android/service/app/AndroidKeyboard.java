@@ -5,11 +5,11 @@ import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.media.AudioManager;
-import android.service.app.utils.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputConnection;
 
+@Deprecated
 public class AndroidKeyboard extends InputMethodService implements KeyboardView.OnKeyboardActionListener
 {
     private KeyboardView kv;
@@ -33,8 +33,6 @@ public class AndroidKeyboard extends InputMethodService implements KeyboardView.
         kv.setKeyboard(keyboard);
 
         kv.setOnKeyboardActionListener(this);
-
-        Log.v("kv=" + kv);
 
         Intent i = new Intent("EVENT_UPDATED");
         i.putExtra("<Key>", "\nonCreateInputView!");
@@ -79,8 +77,6 @@ public class AndroidKeyboard extends InputMethodService implements KeyboardView.
     @Override
     public void onPress(int primaryCode)
     {
-        Log.v("primaryCode=" + primaryCode);
-
         Intent i = new Intent("EVENT_UPDATED");
         i.putExtra("<Key>", "\nonPress:primaryCode= " + primaryCode);
         sendBroadcast(i);
@@ -102,8 +98,6 @@ public class AndroidKeyboard extends InputMethodService implements KeyboardView.
         Intent i = new Intent("EVENT_UPDATED");
         i.putExtra("<Key>", "\nonKey:primaryCode= " + primaryCode);
         sendBroadcast(i);
-
-        Log.v("primaryCode=" + String.valueOf(primaryCode));
 
         switch(primaryCode){
 
@@ -147,8 +141,6 @@ public class AndroidKeyboard extends InputMethodService implements KeyboardView.
     @Override
     public void onText(CharSequence text)
     {
-        Log.v("text=" + text);
-
         Intent i = new Intent("EVENT_UPDATED");
         i.putExtra("<Key>", "\nonText:text= " + text);
         sendBroadcast(i);

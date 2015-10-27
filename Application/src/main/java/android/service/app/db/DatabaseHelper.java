@@ -19,7 +19,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
     public static final Gps GPS = new Gps();
     private Database database;
 
-    public DatabaseHelper(Context context, Database database)
+    protected DatabaseHelper(Context context, Database database)
     {
         super(context, database.databaseName, null, database.databaseVersion);
         this.database = database;
@@ -27,6 +27,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 
     public <T extends Data> int addData(T data)
     {
+        if (Log.isDebugEnabled()) Log.debug("insert:data=" + data);
         return Integer.valueOf(String.valueOf(data.insert(getWritableDatabase())));
     }
 
@@ -96,17 +97,17 @@ public class DatabaseHelper extends SQLiteOpenHelper
             database.endTransaction();
         }
 
-        Log.v("sync_points=" + sync_points().getAll());
+        if (Log.isInfoEnabled()) Log.info("sync_points=" + sync_points().getAll());
     }
 
     private void updateSync(Sync sync, Sync newSync)
     {
-        SYNC.update(getWritableDatabase(), sync, newSync);
+        sync_points().update(getWritableDatabase(), sync, newSync);
     }
 
     public Sync getSyncByTableName(String tableName)
     {
-        return SYNC.filterBy(Sync.TABLE, tableName);
+        return sync_points().filterBy(Sync.TABLE, tableName);
     }
 
     @Override
@@ -119,8 +120,8 @@ public class DatabaseHelper extends SQLiteOpenHelper
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
     {
-        Log.v("oldVersion=" + oldVersion);
-        Log.v("newVersion=" + newVersion);
+        if (Log.isInfoEnabled()) Log.info("oldVersion=" + oldVersion);
+        if (Log.isInfoEnabled()) Log.info("newVersion=" + newVersion);
 
         for (Data data: Database.getDatabaseByNameVersion(database.databaseName, oldVersion).tableSet)
             db.execSQL(data.generateDropTableScript());

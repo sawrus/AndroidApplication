@@ -7,6 +7,7 @@ import android.service.app.db.Data;
 import android.service.app.db.DatabaseHelper;
 import android.service.app.utils.Log;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -21,12 +22,24 @@ public class Sync extends Data<Sync>
     public static final String SYNC_ID = "sync_id";
     public static final String ACCOUNT_ID = "account_id";
     public static final String TABLE = "table_name";
-    private static final Map<String, String> fields = new LinkedHashMap<String, String>(){
-        {put(ID, INTEGER_PRIMARY_KEY);}
-        {put(SYNC_ID, INTEGER);}
-        {put(ACCOUNT_ID, INTEGER);}
-        {put(TABLE, TEXT);}
-    };
+    private static final Map<String, String> fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>()
+    {
+        {
+            put(ID, INTEGER_PRIMARY_KEY);
+        }
+
+        {
+            put(SYNC_ID, INTEGER);
+        }
+
+        {
+            put(ACCOUNT_ID, INTEGER);
+        }
+
+        {
+            put(TABLE, TEXT);
+        }
+    });
 
     public Sync()
     {
@@ -115,8 +128,8 @@ public class Sync extends Data<Sync>
 
     public void update(SQLiteDatabase database, Sync oldSync, Sync newSync)
     {
-        Log.v("update:oldSync=" + oldSync);
-        Log.v("update:newSync=" + newSync);
+        if (Log.isDebugEnabled()) Log.debug("update:oldSync=" + oldSync);
+        if (Log.isDebugEnabled()) Log.debug("update:newSync=" + newSync);
         if (oldSync != null && newSync != null && !oldSync.isEmpty())
         {
             ContentValues data = new ContentValues();
@@ -125,11 +138,11 @@ public class Sync extends Data<Sync>
             database.update(getTableName(), data, Sync.ID + "=" + oldSync.getId(), null);
 
             String updateScript = "UPDATE " + getTableName() + " SET " + Sync.SYNC_ID + " = " + newSync.getSyncId() + " WHERE " + Sync.ID + " = " + oldSync.getId();
-            Log.v("updateScript=" + updateScript);
+            if (Log.isDebugEnabled()) Log.debug("updateScript=" + updateScript);
         }
     }
 
-    public Sync getDataFromCursor(Cursor cursor)
+    protected Sync getDataFromCursor(Cursor cursor)
     {
         Sync data = new Sync();
         data.setAccountId(cursor.getInt(cursor.getColumnIndex(ACCOUNT_ID)));

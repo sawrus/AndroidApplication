@@ -6,6 +6,7 @@ import android.service.app.db.Data;
 import android.service.app.db.DatabaseHelper;
 import android.support.annotation.NonNull;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -16,9 +17,12 @@ public class Account extends Data<Account>
 
     private static final String table_name = "account";
     public static final String EMAIL = "email";
-    private static final Map<String, String> fields = new LinkedHashMap<String, String>(){
-        {put(EMAIL, TEXT);}
-    };
+    private static final Map<String, String> fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>()
+    {
+        {
+            put(EMAIL, TEXT);
+        }
+    });
 
     @Override
     protected Set<String> getFields()
@@ -55,7 +59,7 @@ public class Account extends Data<Account>
     }
 
     @NonNull
-    public Account getDataFromCursor(Cursor cursor)
+    protected Account getDataFromCursor(Cursor cursor)
     {
         Account data = new Account();
         data.setEmail(cursor.getString(cursor.getColumnIndex(EMAIL)));

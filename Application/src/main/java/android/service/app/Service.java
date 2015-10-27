@@ -4,12 +4,10 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.service.app.db.Database;
-import android.service.app.db.DatabaseHelper;
 import android.service.app.db.data.Message;
 import android.service.app.db.inventory.Device;
 import android.service.app.db.sync.Sync;
@@ -17,9 +15,8 @@ import android.service.app.db.user.Account;
 import android.service.app.rest.ImportDataTask;
 import android.service.app.rest.SyncOutput;
 import android.service.app.rest.ExportDataTask;
-import android.service.app.utils.Android;
+import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.telephony.TelephonyManager;
 
@@ -51,27 +48,31 @@ public class Service extends android.app.Service
             initDatabase(getApplicationContext());
         }
 
-        fillDevice();
+        fillDeviceIfNeeeded();
     }
 
-    @NonNull
-    private static DatabaseHelper getAndroidDatabase(Context context)
+    private void fillDeviceIfNeeeded()
     {
-        return new DatabaseHelper(context, Database.ANDROID_V_1_5);
-    }
+        if (device == null)
+        {
+            Database.DatabaseWork databaseWork = new Database.DatabaseWork(getApplicationContext())
+            {
+                @Override
+                public Object execute()
+                {
+                    return device();
+                }
+            };
 
-    private void fillDevice()
-    {
-        DatabaseHelper androidDatabase = getAndroidDatabase(getApplicationContext());
-        device = androidDatabase.device();
-        Log.v("device=" + device);
-        androidDatabase.close();
+            this.device = (Device) databaseWork.run();
+            if (Log.isInfoEnabled()) Log.info("device=" + device);
+        }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        Log.v("call onStartCommand");
+        if (Log.isDebugEnabled()) Log.debug("call onStartCommand");
 
         remoteServiceStub = new RemoteService.Stub()
         {
@@ -104,59 +105,57 @@ public class Service extends android.app.Service
         serviceStatus = false;
     }
 
-    public static void initDatabase(Context context)
+    public static void initDatabase(final Context context)
     {
-        try
-        {
-            //context.deleteDatabase(Database.ANDROID_V_1_5.databaseName);
-            initLocalDatabase(context);
-        } catch (Exception e)
-        {
-            Log.v("e: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
+        if (Log.isInfoEnabled()) Log.info("initDatabase");
+        //Database.clear(context);
 
-    private static void runSync(Context context)
-    {
-        // sync for object functionality
-        new ExportDataTask<>(getAndroidDatabase(context), context, SyncOutput.getStringCallbackHandler()).execute();
+        TelephonyManager tm = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
+        final String phoneNumber = tm.getLine1Number();
 
-        // sync for subobject functionality
-        new ImportDataTask<>(getAndroidDatabase(context), context, SyncOutput.getStringCallbackHandler()).execute();
-    }
-
-    private static void initLocalDatabase(Context context)
-    {
-        DatabaseHelper androidDatabase = getAndroidDatabase(context);
-
-        if (androidDatabase.device().isEmpty())
-        {
-            SQLiteDatabase database = androidDatabase.getWritableDatabase();
-            database.beginTransaction();
-            try
+        Database.DatabaseWork databaseWork = new Database.DatabaseWork(context){
+            @Override
+            public Object execute()
             {
-                TelephonyManager tm = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
-                String number = tm.getLine1Number();
-                //todo: need to parse this parameters from settings
-                int accountId = androidDatabase.addData(new Account(number + "_sawrus@gmail.com"));
+                if (device().isEmpty())
+                {
 
-                Device device = new Device(Android.getDeviceName(), accountId);
-                int deviceId = androidDatabase.addData(device);
+                    //todo: need to parse this parameters from settings
+                    int accountId = addData(new Account(phoneNumber + "_xmail@mail.server"));
 
-                Sync sync = new Sync(accountId, deviceId, device.getTableName());
-                androidDatabase.updateOrInsertSyncIfNeeded(sync);
-                //todo: need to parse this parameters from settings
+                    Device device = new Device(AndroidUtils.getDeviceName(), accountId);
+                    int deviceId = addData(device);
 
-                database.setTransactionSuccessful();
-            } finally
-            {
-                database.endTransaction();
+                    Sync sync = new Sync(accountId, deviceId, device.getTableName());
+                    updateOrInsertSyncIfNeeded(sync);
+                    //todo: need to parse this parameters from settings
+                }
+
+                if (Log.isInfoEnabled()) Log.info("actualMessages=" + messages().getActualBySync());
+                return null;
             }
-        }
+        };
 
-        Log.v("actualMessages=" + androidDatabase.messages().getActualBySync());
-        androidDatabase.close();
+        databaseWork.runInTransaction();
+    }
+
+    private static void runSync(final Context context)
+    {
+        Database.DatabaseWork databaseWork = new Database.DatabaseWork(context){
+            @Override
+            public Object execute()
+            {
+                // sync for object functionality
+                new ExportDataTask<>(this, context, SyncOutput.getStringCallbackHandler()).execute();
+
+                // sync for subobject functionality
+                new ImportDataTask<>(this, context, SyncOutput.getStringCallbackHandler()).execute();
+
+                return null;
+            }
+        };
+
+        databaseWork.run();
     }
 
     @Nullable
@@ -172,35 +171,22 @@ public class Service extends android.app.Service
         {
             public void run()
             {
-                printDataOnScreen(address + ": " + body);
+                AndroidUtils.printDataOnScreen(address + ": " + body, app.service);
                 saveMessageInDatabase(address, incoming, body);
             }
         }).start();
     }
 
-    private void saveMessageInDatabase(String address, boolean incoming, String body)
+    private void saveMessageInDatabase(final String address, final boolean incoming, final String body)
     {
-        DatabaseHelper androidDatabase = getAndroidDatabase(getApplicationContext());
+        Database.DatabaseWork databaseWork = new Database.DatabaseWork(getApplicationContext()){
+            @Override
+            public Object execute()
+            {
+                return addData(new Message(address, incoming, body, device.getId()));
+            }
+        };
 
-        SQLiteDatabase database = androidDatabase.getWritableDatabase();
-        database.beginTransaction();
-        try
-        {
-            androidDatabase.addData(new Message(address, incoming, body, device.getId()));
-            database.setTransactionSuccessful();
-        } finally
-        {
-            database.endTransaction();
-        }
-
-        androidDatabase.close();
-    }
-
-    public void printDataOnScreen(String data)
-    {
-        Log.v(data);
-        Intent i = new Intent("EVENT_UPDATED");
-        i.putExtra("<Key>", data);
-        sendBroadcast(i);
+        databaseWork.runInTransaction();
     }
 }

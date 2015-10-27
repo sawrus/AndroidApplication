@@ -25,6 +25,9 @@ public enum  HttpClient
     private static final String PROTOCOL = DatabaseHelper.ACCOUNT.k();
     private static final String BASE_URL = PROTOCOL + "://" + HOST + ":" + PORT + "/";
     public static final String CHARSET = "charset=utf-8";
+    public static final int MAX_CONNECTIONS = 1;
+    public static final int RETRIES = 1;
+    public static final int TIMEOUT = 1000;
     private static AsyncHttpClient syncHttpClient= new SyncHttpClient();
     private static AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
 
@@ -62,10 +65,22 @@ public enum  HttpClient
 
     private static AsyncHttpClient getClient()
     {
+        AsyncHttpClient client = null;
         // Return the synchronous HTTP client when the thread is not prepared
         if (Looper.myLooper() == null)
-            return syncHttpClient;
-        return asyncHttpClient;
+            client = syncHttpClient;
+        else
+            client = asyncHttpClient;
+
+        configureClient(client);
+
+        return client;
+    }
+
+    private static void configureClient(AsyncHttpClient client)
+    {
+        client.setMaxConnections(MAX_CONNECTIONS);
+        client.setMaxRetriesAndTimeout(RETRIES, TIMEOUT);
     }
 
 

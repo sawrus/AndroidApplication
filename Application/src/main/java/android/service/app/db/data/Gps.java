@@ -9,6 +9,7 @@ import android.service.app.db.DeviceDependable;
 import android.service.app.db.inventory.Device;
 import android.support.annotation.NonNull;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -24,12 +25,24 @@ public class Gps extends Data<Gps> implements DeviceDependable
     public static final String DEVICE_ID = "device_id";
     public static final String LATITUDE = "latitude";
     public static final String LONGITUDE = "longitude";
-    private static final Map<String, String> fields = new LinkedHashMap<String, String>(){
-        {put(ID, INTEGER_PRIMARY_KEY);}
-        {put(LATITUDE, DOUBLE);}
-        {put(LONGITUDE, DOUBLE);}
-        {put(DEVICE_ID, INTEGER);}
-    };
+    private static final Map<String, String> fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>()
+    {
+        {
+            put(ID, INTEGER_PRIMARY_KEY);
+        }
+
+        {
+            put(LATITUDE, DOUBLE);
+        }
+
+        {
+            put(LONGITUDE, DOUBLE);
+        }
+
+        {
+            put(DEVICE_ID, INTEGER);
+        }
+    });
 
     public Gps()
     {
@@ -121,7 +134,7 @@ public class Gps extends Data<Gps> implements DeviceDependable
     }
 
     @NonNull
-    public Gps getDataFromCursor(Cursor cursor)
+    protected Gps getDataFromCursor(Cursor cursor)
     {
         Gps data = new Gps();
         data.setId(cursor.getInt(cursor.getColumnIndex(ID)));

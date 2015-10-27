@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -18,13 +17,10 @@ import android.provider.Settings;
 import android.service.app.AndroidApplication;
 import android.service.app.RemoteService;
 import android.service.app.db.Database;
-import android.service.app.db.DatabaseHelper;
 import android.service.app.db.data.Gps;
-import android.service.app.db.data.Message;
 import android.service.app.db.inventory.Device;
-import android.service.app.utils.Android;
+import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.util.LinkedHashSet;
@@ -74,7 +70,7 @@ public class GpsService extends Service implements LocationListener
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        Log.v("call onStartCommand");
+        if (Log.isInfoEnabled()) Log.info("call onStartCommand");
 
         app.setGpsServiceOnCreate(true);
         this.context = app.getApplicationContext();
@@ -82,7 +78,7 @@ public class GpsService extends Service implements LocationListener
         {
             public void sendString(String data) throws RemoteException
             {
-                Log.v("remoteServiceStub:sendString" + data);
+                if (Log.isInfoEnabled()) Log.info("remoteServiceStub:sendString" + data);
             }
         };
 
@@ -111,7 +107,7 @@ public class GpsService extends Service implements LocationListener
 
             Gps gps = new Gps(device.getId(), latitude, longitude);
             if (!GPSES.contains(gps))
-                Android.printDataOnScreen("latitude=" + latitude + "; longitude=" + longitude, this);
+                AndroidUtils.printDataOnScreen("latitude=" + latitude + "; longitude=" + longitude, this);
             return gps;
         }
 
@@ -123,20 +119,16 @@ public class GpsService extends Service implements LocationListener
 
     private void saveGpsSetToDatabase()
     {
-        DatabaseHelper androidDatabase = getAndroidDatabase(getApplicationContext());
-        SQLiteDatabase database = androidDatabase.getWritableDatabase();
-        database.beginTransaction();
-        try
-        {
-            for (Gps gps: GPSES) androidDatabase.addData(gps);
-            database.setTransactionSuccessful();
-        }
-        finally
-        {
-            database.endTransaction();
-        }
+        Database.DatabaseWork databaseWork = new Database.DatabaseWork(context){
+            @Override
+            public Object execute()
+            {
+                for (Gps gps: GPSES) addData(gps);
+                return null;
+            }
+        };
 
-        androidDatabase.close();
+        databaseWork.runInTransaction();
     }
 
     private void trackGps()
@@ -148,7 +140,7 @@ public class GpsService extends Service implements LocationListener
         } catch (Exception e)
         {
             e.printStackTrace();
-            Android.printDataOnScreen(e.getMessage(), this);
+            AndroidUtils.printDataOnScreen(e.getMessage(), this);
         }
     }
 
@@ -167,15 +159,15 @@ public class GpsService extends Service implements LocationListener
 
     private void fillDevice()
     {
-        DatabaseHelper androidDatabase = getAndroidDatabase(getApplicationContext());
-        device = androidDatabase.device();
-        androidDatabase.close();
-    }
+        Database.DatabaseWork databaseWork = new Database.DatabaseWork(context){
+            @Override
+            public Object execute()
+            {
+                return device();
+            }
+        };
 
-    @NonNull
-    private static DatabaseHelper getAndroidDatabase(Context context)
-    {
-        return new DatabaseHelper(context, Database.ANDROID_V_1_5);
+        device = (Device) databaseWork.run();
     }
 
     public void setContext(Context context)
@@ -203,7 +195,7 @@ public class GpsService extends Service implements LocationListener
             if (isNetworkEnabled)
             {
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-                Log.v("Network");
+                if (Log.isDebugEnabled()) Log.debug("Network");
                 if (locationManager != null)
                 {
                     location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -219,7 +211,7 @@ public class GpsService extends Service implements LocationListener
                 if (location == null)
                 {
                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-                    Log.v("GPS Enabled");
+                    if (Log.isDebugEnabled()) Log.debug("GPS Enabled");
                     if (locationManager != null)
                     {
                         location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -310,7 +302,7 @@ public class GpsService extends Service implements LocationListener
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras)
     {
-        Log.v("status changed to " + provider + " [" + status + "]");
+        Log.debug("status changed to " + provider + " [" + status + "]");
         trackGps();
     }
 

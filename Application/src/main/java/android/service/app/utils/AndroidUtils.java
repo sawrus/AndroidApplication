@@ -4,7 +4,7 @@ import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.Build;
 
-public enum Android
+public enum AndroidUtils
 {
     utils;
 
@@ -13,6 +13,29 @@ public enum Android
         Intent i = new Intent("EVENT_UPDATED");
         i.putExtra("<Key>", message);
         wrapper.sendBroadcast(i);
+
+        if (Log.isInfoEnabled()) Log.info(message);
+    }
+
+    public static void handleException(Exception e)
+    {
+        handleExceptionWithoutThrow(e);
+
+        throw new AndroidApplicationException(e);
+    }
+
+    public static void handleExceptionWithoutThrow(Exception e)
+    {
+        Log.error(e);
+        e.printStackTrace();
+    }
+
+    public static class AndroidApplicationException extends RuntimeException
+    {
+        public AndroidApplicationException(Throwable throwable)
+        {
+            super(throwable);
+        }
     }
 
     public static String getDeviceName()

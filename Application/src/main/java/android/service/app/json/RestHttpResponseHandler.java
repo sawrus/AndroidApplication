@@ -16,30 +16,30 @@ public class RestHttpResponseHandler extends JsonHttpResponseHandler
     @Override
     public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse)
     {
-        Log.v("statusCode=" + statusCode);
-        Log.v("headers=" + Arrays.asList(headers));
-        Log.v("throwable=" + throwable.getMessage());
-        Log.v("errorResponse=" + errorResponse);
+        Log.error("statusCode=" + statusCode);
+        Log.error("headers=" + Arrays.toString(headers));
+        Log.error("throwable=" + throwable.getMessage());
+        Log.error("errorResponse=" + errorResponse);
         throw new RuntimeException(throwable);
     }
 
     @Override
     public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse)
     {
-        Log.v("statusCode=" + statusCode);
-        Log.v("headers=" + Arrays.asList(headers));
-        Log.v("throwable=" + throwable.getMessage());
-        Log.v("errorResponse=" + errorResponse);
+        Log.error("statusCode=" + statusCode);
+        Log.error("headers=" + Arrays.toString(headers));
+        Log.error("throwable=" + throwable.getMessage());
+        Log.error("errorResponse=" + errorResponse);
         throw new RuntimeException(throwable);
     }
 
     @Override
     public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable)
     {
-        Log.v("statusCode=" + statusCode);
-        Log.v("headers=" + Arrays.asList(headers));
-        Log.v("throwable=" + throwable.getMessage());
-        Log.v("responseString=" + responseString);
+        Log.error("statusCode=" + statusCode);
+        Log.error("headers=" + Arrays.toString(headers));
+        Log.error("throwable=" + throwable.getMessage());
+        Log.error("responseString=" + responseString);
         throw new RuntimeException(throwable);
     }
 }

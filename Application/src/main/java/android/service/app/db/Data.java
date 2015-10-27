@@ -18,6 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Data<T extends Data> implements GenericData
 {
@@ -49,21 +50,27 @@ public abstract class Data<T extends Data> implements GenericData
     private String created_when = getCoordinatedUniversalDateTime();
     private String timezone = TimeZone.getDefault().getID() ;
 
-    private static final Map<String, String> fields = new LinkedHashMap<String, String>(){
+    private static final Map<String, String> fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(){
         {put(ID, INTEGER_PRIMARY_KEY);}
         {put(DESCRIPTION, TEXT);}
         {put(TIMEZONE, TEXT);}
         {put(CREATED_WHEN, TEXT);}
-    };
+    });
 
     public static Device device = new Device();
+    private static AtomicBoolean wasInitiatedEarlier = new AtomicBoolean(false);
 
-    public void init()
+    public boolean isWasInitiatedEarlier()
     {
-        SQLiteDatabase readableDatabase = getReadableDatabase();
+        return wasInitiatedEarlier.get();
+    }
+
+    public synchronized void init()
+    {
         if (readableDatabase != null && device.isEmpty() && this instanceof DeviceDependable)
         {
             device = initDevices(readableDatabase).getFirst();
+            if (!device.isEmpty() && !isWasInitiatedEarlier()) wasInitiatedEarlier.set(true);
         }
     }
 
@@ -122,13 +129,13 @@ public abstract class Data<T extends Data> implements GenericData
         this.readableDatabase = readableDatabase;
     }
 
-    public Data setReadableDatabase(SQLiteDatabase readableDatabase)
+    public synchronized Data setReadableDatabase(SQLiteDatabase readableDatabase)
     {
         this.readableDatabase = readableDatabase;
         return this;
     }
 
-    public Data setWritableDatabase(SQLiteDatabase writableDatabase)
+    public synchronized Data setWritableDatabase(SQLiteDatabase writableDatabase)
     {
         this.writableDatabase = writableDatabase;
         return this;
@@ -136,14 +143,14 @@ public abstract class Data<T extends Data> implements GenericData
 
     protected SQLiteDatabase getReadableDatabase()
     {
-        if (readableDatabase == null) throw new IllegalStateException("stub mode for read");
-        else init();
+        if (readableDatabase == null) throw new IllegalStateException("stub mode for read, class = " + getClass().getSimpleName());
+        else if (!isWasInitiatedEarlier()) init();
         return readableDatabase;
     }
 
     protected SQLiteDatabase getWritableDatabase()
     {
-        if (writableDatabase == null) throw new IllegalStateException("stub mode for write");
+        if (writableDatabase == null) throw new IllegalStateException("stub mode for write, class = " + getClass().getSimpleName());
         return writableDatabase;
     }
 
@@ -154,9 +161,10 @@ public abstract class Data<T extends Data> implements GenericData
 
     protected static String generateCreateTableScript(String tableName, Map<String, String> fields)
     {
-        fields.putAll(Data.fields);
+        LinkedHashMap<String, String> _fields = new LinkedHashMap<>(fields);
+        _fields.putAll(Data.fields);
         String script = "CREATE TABLE " + tableName + " (";
-        for (Map.Entry<String, String> filed : fields.entrySet())
+        for (Map.Entry<String, String> filed : _fields.entrySet())
             script += filed.getKey() + " " + filed.getValue() + ",";
         return script.substring(0, script.lastIndexOf(",")) + ")";
     }
@@ -187,9 +195,17 @@ public abstract class Data<T extends Data> implements GenericData
 
     public Object insert(T data)
     {
-        data.setReadableDatabase(getReadableDatabase());
-        data.setWritableDatabase(getWritableDatabase());
-        return data.insert();
+        if (data != null && !data.isEmpty())
+        {
+            data.setReadableDatabase(getReadableDatabase());
+            data.setWritableDatabase(getWritableDatabase());
+            return data.insert();
+        }
+        else
+        {
+            if (Log.isWarnEnabled()) Log.debug("return null for insert: stub mode for date: " + data);
+            return null;
+        }
     }
 
     public Object insert(Set<T> dataSet)
@@ -197,9 +213,12 @@ public abstract class Data<T extends Data> implements GenericData
         Object result = null;
         for (T data: dataSet)
         {
-            data.setReadableDatabase(getReadableDatabase());
-            data.setWritableDatabase(getWritableDatabase());
-            result = data.insert();
+            if (data != null && !data.isEmpty())
+            {
+                data.setReadableDatabase(getReadableDatabase());
+                data.setWritableDatabase(getWritableDatabase());
+                result = data.insert();
+            }
         }
 
         return result;
@@ -207,13 +226,19 @@ public abstract class Data<T extends Data> implements GenericData
 
     public Map<String, Object> getData()
     {
+        //checkOnEmptyAndThrowException();
         return new LinkedHashMap<String, Object>()
         {
-            {put(ID, getId());}
+            //{put(ID, getId());}
             {put(DESCRIPTION, getDescription());}
             {put(TIMEZONE, getTimezone());}
             {put(CREATED_WHEN, getCreatedWhen());}
         };
+    }
+
+    private void checkOnEmptyAndThrowException()
+    {
+        if (isEmpty()) throw new IllegalStateException("stub mode for data: " + this.toString());
     }
 
     @NonNull
@@ -234,7 +259,7 @@ public abstract class Data<T extends Data> implements GenericData
         String script = selectColumnsQueryPart();
         if (valueFilter instanceof String) valueFilter = "\'" + valueFilter + "\'";
         script += " WHERE " + fieldFilter + " " + operator + " " + valueFilter;
-        Log.v("script" + EQUAL + script);
+        if (Log.isDebugEnabled()) Log.debug("script" + EQUAL + script);
         return database.rawQuery(script, null);
     }
 
@@ -286,7 +311,7 @@ public abstract class Data<T extends Data> implements GenericData
     protected Cursor selectAll(SQLiteDatabase database)
     {
         String script = selectColumnsQueryPart();
-        Log.v("script=" + script);
+        if (Log.isDebugEnabled()) Log.debug("script=" + script);
         return database.rawQuery(script, null);
     }
 
@@ -296,7 +321,7 @@ public abstract class Data<T extends Data> implements GenericData
         String tableName = getTableName();
         //script += " LEFT JOIN sync WHERE sync.table_name" + EQUAL + tableName + " AND " + tableName + ".id > sync.sync_id";
         script += " WHERE " + tableName + ".id "+ MORE_THAN + " (select sync.sync_id from sync where table_name=\'" + tableName + "\')";
-        Log.v("script=" + script);
+        if (Log.isDebugEnabled()) Log.debug("script=" + script);
         return database.rawQuery(script, null);
     }
 
@@ -342,7 +367,7 @@ public abstract class Data<T extends Data> implements GenericData
 
     public T getFirst()
     {
-        return getDataFromCursor(selectFirst());
+        return getDataFromCursorWithClosing(selectFirst());
     }
 
     public T byId(Integer id)
@@ -363,18 +388,16 @@ public abstract class Data<T extends Data> implements GenericData
     @NonNull
     private Set<T> getDataSetFromCursor(SQLiteDatabase readableDatabase, Cursor cursor)
     {
+        if (!checkCursor(cursor)) return Collections.emptySet();
         Set<T> dataSet = new LinkedHashSet<>();
-
-        if (!checkCursor(cursor)) return dataSet;
-
         do
         {
             T data = getDataFromCursor(cursor);
             data.setReadableDatabase(readableDatabase);
             data.setWritableDatabase(writableDatabase);
-            setDevice(data);
+            setDeviceIfNeeeded(data);
             if (!data.isEmpty()) dataSet.add(data);
-            Log.v("data" + EQUAL + data + "; cursor" + EQUAL + cursor);
+            Log.debug("data" + EQUAL + data + "; cursor" + EQUAL + cursor);
             if (!cursor.isLast()) cursor.moveToNext();
             else break;
         } while (!cursor.isClosed());
@@ -391,7 +414,7 @@ public abstract class Data<T extends Data> implements GenericData
         }
         else
         {
-            Log.v("close empty cursor: " + cursor);
+            Log.warn("close empty cursor: " + cursor);
             if (!cursor.isClosed()) cursor.close();
             return false;
         }
@@ -408,7 +431,7 @@ public abstract class Data<T extends Data> implements GenericData
         if (checkCursor(cursor))
         {
             T data = getDataFromCursor(cursor);
-            setDevice(data);
+            setDeviceIfNeeeded(data);
             cursor.close();
             return data;
         }
@@ -416,7 +439,7 @@ public abstract class Data<T extends Data> implements GenericData
             return emptyData();
     }
 
-    private void setDevice(T data)
+    private void setDeviceIfNeeeded(T data)
     {
         if (data instanceof DeviceDependable)
             ((DeviceDependable) data).setDevice(device);
@@ -424,13 +447,13 @@ public abstract class Data<T extends Data> implements GenericData
 
     protected abstract T emptyData();
 
-    public abstract T getDataFromCursor(Cursor cursor);
+    protected abstract T getDataFromCursor(Cursor cursor);
 
     @NonNull
     private String selectColumnsQueryPart()
     {
         String script = "SELECT ";
-        Set<String> fields = getFields();
+        Set<String> fields = new LinkedHashSet<>(getFields());
         fields.addAll(Data.fields.keySet());
         String tableName = getTableName();
 
@@ -444,7 +467,7 @@ public abstract class Data<T extends Data> implements GenericData
     protected Object delete(SQLiteDatabase database, String fieldFilter, String valueFilter, String operator)
     {
         String script = "delete from " + getTableName() + " where " + fieldFilter + " " + operator + " " + valueFilter;
-        Log.v(script);
+        if (Log.isDebugEnabled()) Log.debug(script);
         return database.delete(getTableName(), fieldFilter, new String[]{valueFilter});
     }
 
@@ -561,13 +584,13 @@ public abstract class Data<T extends Data> implements GenericData
     }
 
     @Deprecated
-    public static  <T extends Data> Set<T> getDelta(DatabaseHelper localDatabase, Set<T> dataSet)
+    public static <T extends Data> Set<T> getDelta(DatabaseHelper localDatabase, Set<T> dataSet)
     {
         Integer accountId = localDatabase.device().getAccountId();
 
         if (dataSet.isEmpty())
         {
-            Log.v("no messages in local database");
+            if (Log.isWarnEnabled()) Log.warn("no messages in local database");
             return Collections.emptySet();
         }
 
@@ -588,7 +611,6 @@ public abstract class Data<T extends Data> implements GenericData
             }
         }
 
-        Log.v("newDataSet=" + newDataSet);
         localDatabase.updateOrInsertSyncIfNeeded(new Sync(accountId, newSyncId, tableName));
         return newDataSet;
     }

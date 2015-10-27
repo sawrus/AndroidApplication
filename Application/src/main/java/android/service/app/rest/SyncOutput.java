@@ -5,9 +5,9 @@ import android.support.annotation.NonNull;
 
 public class SyncOutput
 {
-    private String output;
+    private Object output;
 
-    public SyncOutput(String output)
+    public SyncOutput(Object output)
     {
         this.output = output;
     }
@@ -15,19 +15,19 @@ public class SyncOutput
     @Override
     public String toString()
     {
-        return "SyncOutput{" +
-                "output='" + output + '\'' +
-                '}';
+        if (output instanceof Throwable)
+        {
+            return "unkown exception";
+        }
+        else
+            return "SyncOutput{" +
+                    "output='" + output + '\'' +
+                    '}';
     }
 
-    public String getOutput()
+    public Object getOutput()
     {
         return output;
-    }
-
-    public void setOutput(String output)
-    {
-        this.output = output;
     }
 
     @NonNull
@@ -41,7 +41,11 @@ public class SyncOutput
             public void handle(SyncOutput result)
             {
                 this.result = result;
-                Log.v("result=" + result);
+
+                Object output = result.getOutput();
+                if (output instanceof Throwable)
+                    Log.error((Throwable) output);
+                else if (Log.isInfoEnabled()) Log.info("result=" + result);
             }
 
             @Override

@@ -4,8 +4,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.service.app.db.Data;
 import android.service.app.db.DatabaseHelper;
+import android.service.app.db.user.Account;
 import android.support.annotation.NonNull;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -19,10 +21,10 @@ public class Device extends Data<Device>
     public static final String NAME = "name";
     public static final String ACCOUNT_ID = "account_id";
 
-    private static final Map<String, String> fields = new LinkedHashMap<String, String>(){
+    private static final Map<String, String> fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(){
         {put(NAME, TEXT);}
         {put(ACCOUNT_ID, INTEGER);}
-    };
+    });
 
     @Override
     protected Set<String> getFields()
@@ -60,7 +62,7 @@ public class Device extends Data<Device>
     }
 
     @NonNull
-    public Device getDataFromCursor(Cursor cursor)
+    protected Device getDataFromCursor(Cursor cursor)
     {
         Device data = new Device();
         data.setName(cursor.getString(cursor.getColumnIndex(NAME)));
@@ -109,6 +111,13 @@ public class Device extends Data<Device>
     public int getAccountId()
     {
         return account_id;
+    }
+
+    public Account getAccount()
+    {
+        Account account = DatabaseHelper.ACCOUNT;
+        account.setReadableDatabase(getReadableDatabase());
+        return account.getFirst();
     }
 
     @Override

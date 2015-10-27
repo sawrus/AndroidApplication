@@ -2,10 +2,10 @@ package android.service.app.db;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.service.app.db.data.Gps;
-import android.service.app.db.data.Message;
-import android.service.app.db.inventory.Device;
-import android.service.app.db.sync.Sync;
+import android.service.app.db.data.impl.Gps;
+import android.service.app.db.data.impl.Message;
+import android.service.app.db.inventory.impl.Device;
+import android.service.app.db.sync.impl.Sync;
 import android.service.app.db.user.Account;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;

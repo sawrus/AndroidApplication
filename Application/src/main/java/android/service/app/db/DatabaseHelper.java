@@ -3,20 +3,25 @@ package android.service.app.db;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.service.app.db.data.Gps;
-import android.service.app.db.data.Message;
-import android.service.app.db.inventory.Device;
-import android.service.app.db.sync.Sync;
-import android.service.app.db.user.Account;
+import android.service.app.db.data.GenericGps;
+import android.service.app.db.data.GenericMessage;
+import android.service.app.db.inventory.GenericDevice;
+import android.service.app.db.stub.DataStub;
+import android.service.app.db.sync.GenericSync;
+import android.service.app.db.sync.impl.Sync;
+import android.service.app.db.user.GenericAccount;
 import android.service.app.utils.Log;
 
-public class DatabaseHelper extends SQLiteOpenHelper
+import java.util.Set;
+
+public class DatabaseHelper extends SQLiteOpenHelper implements GenericDatabase
 {
-    public static final Device DEVICE = new Device();
-    public static final Message MESSAGE = new Message();
-    public static final Account ACCOUNT = new Account();
-    public static final Sync SYNC = new Sync();
-    public static final Gps GPS = new Gps();
+    public static final Data EMPTY = new DataStub.EmptyData();
+    public static final GenericAccount ACCOUNT = new DataStub.AccountStub();
+    public static final GenericDevice DEVICE = new DataStub.DeviceStub();
+    public static final GenericMessage MESSAGE = new DataStub.MessageStub();
+    public static final GenericGps GPS = new DataStub.GpsStub();
+    public static final GenericSync SYNC = new DataStub.SyncStub();
     private Database database;
 
     protected DatabaseHelper(Context context, Database database)
@@ -25,69 +30,78 @@ public class DatabaseHelper extends SQLiteOpenHelper
         this.database = database;
     }
 
-    public <T extends Data> int addData(T data)
+    public <T extends GenericData> int insert(T data)
     {
-        if (Log.isDebugEnabled()) Log.debug("insert:data=" + data);
-        return Integer.valueOf(String.valueOf(data.insert(getWritableDatabase())));
+        return wrapForWrite(data).insert();
     }
 
-    public <T extends Data> T wrapForRead(T data)
+    public <T extends GenericData> int insert(Set<T> data)
     {
-       return (T) data.setReadableDatabase(getReadableDatabase());
+        if (data != null && !data.isEmpty())
+            return wrapForWrite(data.iterator().next()).insert();
+        else
+            return GenericDatabase.EMPTY_DATA;
     }
 
-    private  <T extends Data> T wrapForWrite(T data)
+    public <T extends GenericData> T wrapForRead(T data)
+    {
+        data.setReadableDatabase(getReadableDatabase());
+       return data;
+    }
+
+    private <T extends GenericData> T wrapForWrite(T data)
     {
         wrapForRead(data);
         data.setWritableDatabase(getWritableDatabase());
         return data;
     }
 
-    public Device devices()
+    @Override
+    public GenericDevice devices()
     {
         return wrapForWrite(DEVICE);
     }
 
-    public Device device()
-    {
-        return devices().getFirst();
-    }
-
-    private Account accounts()
+    private GenericAccount accounts()
     {
         return wrapForWrite(ACCOUNT);
     }
 
-    public Account account()
+    @Override
+    public GenericAccount account()
     {
         return accounts().getFirst();
     }
 
-    public Message messages()
+    @Override
+    public GenericMessage messages()
     {
         return wrapForWrite(MESSAGE);
     }
 
-    public Sync sync_points()
+    @Override
+    public GenericSync sync_points()
     {
         return wrapForWrite(SYNC);
     }
 
-    public Gps coordinates()
+    @Override
+    public GenericGps coordinates()
     {
         return wrapForWrite(GPS);
     }
 
-    public void updateOrInsertSyncIfNeeded(Sync newSync)
+    @Override
+    public void updateOrInsertSyncIfNeeded(GenericSync newSync)
     {
         SQLiteDatabase database = getWritableDatabase();
         database.beginTransaction();
 
         try
         {
-            Sync sync = getSyncByTableName(newSync.getTable());
+            GenericSync sync = getSyncByTableName(newSync.getTable());
             if (sync.isEmpty())
-                addData(newSync);
+                insert(newSync);
             else
                 updateSync(sync, newSync);
 
@@ -100,12 +114,12 @@ public class DatabaseHelper extends SQLiteOpenHelper
         if (Log.isInfoEnabled()) Log.info("sync_points=" + sync_points().getAll());
     }
 
-    private void updateSync(Sync sync, Sync newSync)
+    private void updateSync(GenericSync sync, GenericSync newSync)
     {
         sync_points().update(getWritableDatabase(), sync, newSync);
     }
 
-    public Sync getSyncByTableName(String tableName)
+    public GenericSync getSyncByTableName(String tableName)
     {
         return sync_points().filterBy(Sync.TABLE, tableName);
     }

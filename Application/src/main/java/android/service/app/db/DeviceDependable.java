@@ -1,9 +1,9 @@
 package android.service.app.db;
 
-import android.service.app.db.inventory.Device;
+import android.service.app.db.inventory.GenericDevice;
 
 public interface DeviceDependable
 {
-    Device getDevice();
-    void setDevice(Device device);
+    GenericDevice getDevice();
+    void setDevice(GenericDevice device);
 }

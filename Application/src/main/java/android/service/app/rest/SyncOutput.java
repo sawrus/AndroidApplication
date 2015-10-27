@@ -12,6 +12,11 @@ public class SyncOutput
         this.output = output;
     }
 
+    public boolean isSuccess()
+    {
+        return !(output instanceof Throwable);
+    }
+
     @Override
     public String toString()
     {

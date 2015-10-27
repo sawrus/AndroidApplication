@@ -1,23 +1,27 @@
 package android.service.app.db;
 
-import android.service.app.db.data.Gps;
-import android.service.app.db.data.Message;
-import android.service.app.db.inventory.Device;
+import android.service.app.db.data.GenericGps;
+import android.service.app.db.data.GenericMessage;
+import android.service.app.db.data.impl.Gps;
+import android.service.app.db.data.impl.Message;
+import android.service.app.db.inventory.GenericDevice;
+import android.service.app.db.inventory.impl.Device;
 import android.service.app.db.user.Account;
+import android.service.app.db.user.GenericAccount;
 
 import java.util.Set;
 
 public interface DataBridge<Criteria, ResponseHandler>
 {
-    Set<Message> getMessages(Criteria criteria);
-    ResponseHandler postMessages(Set<Message> messages);
+    Set<GenericMessage> getMessages(Criteria criteria);
+    ResponseHandler postMessages(Set<GenericMessage> messages);
 
-    Set<Gps> getCoordinates(Criteria criteria);
-    ResponseHandler postGps(Set<Gps> gpsSets);
+    Set<GenericGps> getCoordinates(Criteria criteria);
+    ResponseHandler postGps(Set<GenericGps> gpsSets);
 
-    Account getAccount(Criteria criteria);
-    ResponseHandler postAccount(Account account);
+    GenericAccount getAccount(Criteria criteria);
+    ResponseHandler postAccount(GenericAccount account);
 
-    Set<Device> getDevices(Criteria criteria);
-    ResponseHandler postDevice(Device device);
+    Set<GenericDevice> getDevices(Criteria criteria);
+    ResponseHandler postDevice(GenericDevice device);
 }

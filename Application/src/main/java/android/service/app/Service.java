@@ -8,9 +8,11 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.service.app.db.Database;
-import android.service.app.db.data.Message;
-import android.service.app.db.inventory.Device;
-import android.service.app.db.sync.Sync;
+import android.service.app.db.data.impl.Message;
+import android.service.app.db.inventory.GenericDevice;
+import android.service.app.db.inventory.impl.Device;
+import android.service.app.db.sync.GenericSync;
+import android.service.app.db.sync.impl.Sync;
 import android.service.app.db.user.Account;
 import android.service.app.rest.ImportDataTask;
 import android.service.app.rest.SyncOutput;
@@ -28,7 +30,7 @@ public class Service extends android.app.Service
     public AndroidApplication app;
     private RemoteService.Stub remoteServiceStub;
     private boolean serviceStatus;
-    private Device device = null;
+    private GenericDevice device = null;
 
     @Override
     public void onCreate()
@@ -60,11 +62,11 @@ public class Service extends android.app.Service
                 @Override
                 public Object execute()
                 {
-                    return device();
+                    return devices().getFirst();
                 }
             };
 
-            this.device = (Device) databaseWork.run();
+            this.device = (GenericDevice) databaseWork.run();
             if (Log.isInfoEnabled()) Log.info("device=" + device);
         }
     }
@@ -117,16 +119,16 @@ public class Service extends android.app.Service
             @Override
             public Object execute()
             {
-                if (device().isEmpty())
+                if (devices().getFirst().isEmpty())
                 {
 
                     //todo: need to parse this parameters from settings
-                    int accountId = addData(new Account(phoneNumber + "_xmail@mail.server"));
+                    int accountId = insert(new Account(phoneNumber + "_xmail@mail.server"));
 
-                    Device device = new Device(AndroidUtils.getDeviceName(), accountId);
-                    int deviceId = addData(device);
+                    GenericDevice device = new Device(AndroidUtils.getDeviceName(), accountId);
+                    int deviceId = insert(device);
 
-                    Sync sync = new Sync(accountId, deviceId, device.getTableName());
+                    GenericSync sync = new Sync(accountId, deviceId, device.getTableName());
                     updateOrInsertSyncIfNeeded(sync);
                     //todo: need to parse this parameters from settings
                 }
@@ -183,7 +185,7 @@ public class Service extends android.app.Service
             @Override
             public Object execute()
             {
-                return addData(new Message(address, incoming, body, device.getId()));
+                return insert(new Message(address, incoming, body, device.getId()));
             }
         };
 

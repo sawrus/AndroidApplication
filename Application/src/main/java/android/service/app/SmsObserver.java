@@ -63,10 +63,10 @@ public class SmsObserver extends ContentObserver
                         if (type == SMS_SENT)
                         {
                             AndroidUtils.printDataOnScreen("sms sent: ", ((Service) SmsObserver.this.context));
-                            String address = cursor.getString(ADDRESS);
+                            String phoneNumber = cursor.getString(ADDRESS);
                             String body = cursor.getString(BODY);
                             cursor.close();
-                            ((Service) context).runSmsEvent(address, body, false, contentResolver);
+                            ((Service) context).runSmsEvent(phoneNumber, body, false, contentResolver);
                         }
                     }
                 }

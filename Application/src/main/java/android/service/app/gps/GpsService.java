@@ -17,8 +17,8 @@ import android.provider.Settings;
 import android.service.app.AndroidApplication;
 import android.service.app.RemoteService;
 import android.service.app.db.Database;
-import android.service.app.db.data.Gps;
-import android.service.app.db.inventory.Device;
+import android.service.app.db.data.impl.Gps;
+import android.service.app.db.inventory.impl.Device;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
 import android.support.annotation.Nullable;
@@ -123,7 +123,7 @@ public class GpsService extends Service implements LocationListener
             @Override
             public Object execute()
             {
-                for (Gps gps: GPSES) addData(gps);
+                for (Gps gps: GPSES) insert(gps);
                 return null;
             }
         };
@@ -163,7 +163,7 @@ public class GpsService extends Service implements LocationListener
             @Override
             public Object execute()
             {
-                return device();
+                return devices().getFirst();
             }
         };
 

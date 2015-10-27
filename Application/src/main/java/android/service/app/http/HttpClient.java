@@ -20,16 +20,16 @@ public enum  HttpClient
 {
     instance;
 
-    private static final String HOST = DatabaseHelper.ACCOUNT.h();
-    private static final String PORT = DatabaseHelper.ACCOUNT.i();
-    private static final String PROTOCOL = DatabaseHelper.ACCOUNT.k();
+    private static final String HOST = DatabaseHelper.EMPTY.h();
+    private static final String PORT = DatabaseHelper.EMPTY.i();
+    private static final String PROTOCOL = DatabaseHelper.EMPTY.k();
     private static final String BASE_URL = PROTOCOL + "://" + HOST + ":" + PORT + "/";
     public static final String CHARSET = "charset=utf-8";
     public static final int MAX_CONNECTIONS = 1;
     public static final int RETRIES = 1;
     public static final int TIMEOUT = 1000;
-    private static AsyncHttpClient syncHttpClient= new SyncHttpClient();
-    private static AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+    private static final AsyncHttpClient syncHttpClient= new SyncHttpClient();
+    private static final AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
 
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
         getClient().get(getAbsoluteUrl(url), params, responseHandler);

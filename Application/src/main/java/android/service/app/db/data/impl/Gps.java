@@ -1,12 +1,12 @@
-package android.service.app.db.data;
+package android.service.app.db.data.impl;
 
-import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.service.app.db.Data;
 import android.service.app.db.DatabaseHelper;
 import android.service.app.db.DeviceDependable;
-import android.service.app.db.inventory.Device;
+import android.service.app.db.data.GenericGps;
+import android.service.app.db.inventory.impl.Device;
+import android.service.app.db.inventory.GenericDevice;
 import android.support.annotation.NonNull;
 
 import java.util.Collections;
@@ -14,12 +14,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Gps extends Data<Gps> implements DeviceDependable
+public class Gps extends Data<GenericGps> implements DeviceDependable, GenericGps
 {
     private int device_id = -3;
     private double latitude = -3;
     private double longitude = -3;
-    private Device device = new Device();
+    private GenericDevice device = new Device();
 
     private static final String table_name = "gps";
     public static final String DEVICE_ID = "device_id";
@@ -56,12 +56,12 @@ public class Gps extends Data<Gps> implements DeviceDependable
         this.longitude = longitude;
     }
 
-    public Device getDevice()
+    public GenericDevice getDevice()
     {
         return device;
     }
 
-    public void setDevice(Device device)
+    public void setDevice(GenericDevice device)
     {
         this.device = device;
     }
@@ -90,31 +90,37 @@ public class Gps extends Data<Gps> implements DeviceDependable
         return table_name;
     }
 
+    @Override
     public int getDeviceId()
     {
         return device_id;
     }
 
+    @Override
     public double getLatitude()
     {
         return latitude;
     }
 
+    @Override
     public double getLongitude()
     {
         return longitude;
     }
 
+    @Override
     public void setDeviceId(int device_id)
     {
         this.device_id = device_id;
     }
 
+    @Override
     public void setLatitude(double latitude)
     {
         this.latitude = latitude;
     }
 
+    @Override
     public void setLongitude(double longitude)
     {
         this.longitude = longitude;
@@ -134,7 +140,7 @@ public class Gps extends Data<Gps> implements DeviceDependable
     }
 
     @NonNull
-    protected Gps getDataFromCursor(Cursor cursor)
+    protected GenericGps getDataFromCursor(Cursor cursor)
     {
         Gps data = new Gps();
         data.setId(cursor.getInt(cursor.getColumnIndex(ID)));
@@ -146,9 +152,9 @@ public class Gps extends Data<Gps> implements DeviceDependable
     }
 
     @Override
-    protected Gps emptyData()
+    protected GenericGps emptyData()
     {
-        return DatabaseHelper.GPS;
+        return new Gps();
     }
 
     @Override

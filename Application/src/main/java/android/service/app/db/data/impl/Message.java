@@ -1,10 +1,11 @@
-package android.service.app.db.data;
+package android.service.app.db.data.impl;
 
 import android.database.Cursor;
 import android.service.app.db.Data;
-import android.service.app.db.DatabaseHelper;
 import android.service.app.db.DeviceDependable;
-import android.service.app.db.inventory.Device;
+import android.service.app.db.data.GenericMessage;
+import android.service.app.db.inventory.impl.Device;
+import android.service.app.db.inventory.GenericDevice;
 import android.support.annotation.NonNull;
 
 import java.util.Collections;
@@ -12,13 +13,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Message extends Data<Message> implements DeviceDependable
+public class Message extends Data<GenericMessage> implements DeviceDependable, GenericMessage
 {
     private String phone = "";
     private boolean incoming = false;
     private String data = "";
     private int device_id = -2;
-    private Device device = new Device();
+    private GenericDevice device = new Device();
 
     private static final String table_name = "message";
     public static final String ADDRESS = "tofrom";
@@ -68,7 +69,7 @@ public class Message extends Data<Message> implements DeviceDependable
         return generateDropTableScript(table_name);
     }
 
-    public Device getDevice()
+    public GenericDevice getDevice()
     {
         return device;
     }
@@ -87,9 +88,9 @@ public class Message extends Data<Message> implements DeviceDependable
     }
 
     @NonNull
-    protected Message getDataFromCursor(Cursor cursor)
+    protected GenericMessage getDataFromCursor(Cursor cursor)
     {
-        Message data = new Message();
+        GenericMessage data = new Message();
         data.setPhone(cursor.getString(cursor.getColumnIndex(ADDRESS)));
         data.setIncoming(cursor.getInt(cursor.getColumnIndex(INCOMING)) == 1);
         data.setData(cursor.getString(cursor.getColumnIndex(DATA)));
@@ -99,9 +100,9 @@ public class Message extends Data<Message> implements DeviceDependable
     }
 
     @Override
-    protected Message emptyData()
+    protected GenericMessage emptyData()
     {
-        return DatabaseHelper.MESSAGE;
+        return new Message();
     }
 
     public Message(){
@@ -116,46 +117,55 @@ public class Message extends Data<Message> implements DeviceDependable
         this.device_id = device_id;
     }
 
+    @Override
     public void setPhone(String phone)
     {
         this.phone = phone;
     }
 
+    @Override
     public void setIncoming(boolean incoming)
     {
         this.incoming = incoming;
     }
 
+    @Override
     public void setData(String data)
     {
         this.data = data;
     }
 
+    @Override
     public void setDeviceId(int device_id)
     {
         this.device_id = device_id;
     }
 
-    public void setDevice(Device device)
+    @Override
+    public void setDevice(GenericDevice device)
     {
         this.device = device;
     }
 
+    @Override
     public String getPhone()
     {
         return phone;
     }
 
+    @Override
     public boolean isIncoming()
     {
         return incoming;
     }
 
+    @Override
     public String getText()
     {
         return data;
     }
 
+    @Override
     public int getDeviceId()
     {
         return device_id;

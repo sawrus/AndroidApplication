@@ -3,8 +3,13 @@ package android.service.app.db;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.service.app.db.inventory.Device;
-import android.service.app.db.sync.Sync;
+import android.service.app.db.data.GenericGps;
+import android.service.app.db.inventory.impl.Device;
+import android.service.app.db.inventory.GenericDevice;
+import android.service.app.db.sync.GenericSync;
+import android.service.app.db.sync.impl.Sync;
+import android.service.app.db.user.Account;
+import android.service.app.db.user.GenericAccount;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
 
@@ -20,7 +25,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class Data<T extends Data> implements GenericData
+public abstract class Data<T extends GenericData> implements GenericData<T>
 {
     protected static final String INTEGER = "INTEGER";
     protected static final String DOUBLE = "DOUBLE";
@@ -45,7 +50,7 @@ public abstract class Data<T extends Data> implements GenericData
     private SQLiteDatabase readableDatabase = null;
     private SQLiteDatabase writableDatabase = null;
 
-    private int id = -1;
+    private int id = GenericDatabase.EMPTY_DATA;
     private String description = "";
     private String created_when = getCoordinatedUniversalDateTime();
     private String timezone = TimeZone.getDefault().getID() ;
@@ -57,7 +62,7 @@ public abstract class Data<T extends Data> implements GenericData
         {put(CREATED_WHEN, TEXT);}
     });
 
-    public static Device device = new Device();
+    public static GenericDevice device = new Device();
     private static AtomicBoolean wasInitiatedEarlier = new AtomicBoolean(false);
 
     public boolean isWasInitiatedEarlier()
@@ -74,42 +79,50 @@ public abstract class Data<T extends Data> implements GenericData
         }
     }
 
+
+    @Override
     public void setId(Integer id)
     {
         this.id = id;
     }
 
+    @Override
     public String getDescription()
     {
         return description;
     }
 
+    @Override
     public void setDescription(String description)
     {
         this.description = description;
     }
 
+    @Override
     public String getTimezone()
     {
         return timezone;
     }
 
+    @Override
     public void setTimezone(String timezone)
     {
         this.timezone = timezone;
     }
 
+    @Override
     public String getCreatedWhen()
     {
         return created_when;
     }
 
+    @Override
     public void setCreatedWhen(String created_when)
     {
         this.created_when = created_when;
     }
 
-    protected String getCoordinatedUniversalDateTime()
+    private String getCoordinatedUniversalDateTime()
     {
         Calendar c = Calendar.getInstance();
         c.setTimeZone(TimeZone.getTimeZone(GMT_TIME_ZONE));
@@ -129,13 +142,13 @@ public abstract class Data<T extends Data> implements GenericData
         this.readableDatabase = readableDatabase;
     }
 
-    public synchronized Data setReadableDatabase(SQLiteDatabase readableDatabase)
+    public synchronized GenericData<T> setReadableDatabase(SQLiteDatabase readableDatabase)
     {
         this.readableDatabase = readableDatabase;
         return this;
     }
 
-    public synchronized Data setWritableDatabase(SQLiteDatabase writableDatabase)
+    public synchronized GenericData<T> setWritableDatabase(SQLiteDatabase writableDatabase)
     {
         this.writableDatabase = writableDatabase;
         return this;
@@ -152,6 +165,16 @@ public abstract class Data<T extends Data> implements GenericData
     {
         if (writableDatabase == null) throw new IllegalStateException("stub mode for write, class = " + getClass().getSimpleName());
         return writableDatabase;
+    }
+
+    public boolean withReadableDatabase()
+    {
+        return readableDatabase != null;
+    }
+
+    public boolean withWritableDatabase()
+    {
+        return writableDatabase != null;
     }
 
     public Data()
@@ -178,52 +201,45 @@ public abstract class Data<T extends Data> implements GenericData
 
     public abstract String generateDropTableScript();
 
-    protected static Object insert(SQLiteDatabase database, String tableName, ContentValues values)
+    protected static int insert(SQLiteDatabase database, String tableName, ContentValues values)
     {
-        return database.insert(tableName, null, values);
+        return (int) database.insert(tableName, null, values);
     }
 
-    public Object insert(SQLiteDatabase database)
+    private int insert(SQLiteDatabase database)
     {
         return insert(database, getTableName(), getContentValues());
     }
 
-    public Object insert()
+    @Override
+    public int insert()
     {
         return insert(getWritableDatabase(), getTableName(), getContentValues());
     }
 
-    public Object insert(T data)
+    public int insert(T data)
     {
-        if (data != null && !data.isEmpty())
+        if (!data.withReadableDatabase())
+            data.setReadableDatabase(getReadableDatabase());
+        if (!data.withWritableDatabase())
+            data.setWritableDatabase(getWritableDatabase());
+        return data.insert();
+    }
+
+    public int insert(Set<T> dataSet)
+    {
+        int result = GenericDatabase.DATA_NOT_FOUND;
+        for (T data: dataSet)
         {
             data.setReadableDatabase(getReadableDatabase());
             data.setWritableDatabase(getWritableDatabase());
-            return data.insert();
-        }
-        else
-        {
-            if (Log.isWarnEnabled()) Log.debug("return null for insert: stub mode for date: " + data);
-            return null;
-        }
-    }
-
-    public Object insert(Set<T> dataSet)
-    {
-        Object result = null;
-        for (T data: dataSet)
-        {
-            if (data != null && !data.isEmpty())
-            {
-                data.setReadableDatabase(getReadableDatabase());
-                data.setWritableDatabase(getWritableDatabase());
-                result = data.insert();
-            }
+            result = data.insert();
         }
 
         return result;
     }
 
+    @Override
     public Map<String, Object> getData()
     {
         //checkOnEmptyAndThrowException();
@@ -242,7 +258,7 @@ public abstract class Data<T extends Data> implements GenericData
     }
 
     @NonNull
-    public ContentValues getContentValues()
+    private ContentValues getContentValues()
     {
         ContentValues contentValues = new ContentValues();
         for (Map.Entry<String, Object> entry: getData().entrySet())
@@ -254,128 +270,155 @@ public abstract class Data<T extends Data> implements GenericData
         return contentValues;
     }
 
-    protected Cursor select(SQLiteDatabase database, String fieldFilter, Object valueFilter, String operator)
+    private Cursor select(SQLiteDatabase database, String fieldFilter, Object valueFilter, String operator)
     {
         String script = selectColumnsQueryPart();
         if (valueFilter instanceof String) valueFilter = "\'" + valueFilter + "\'";
         script += " WHERE " + fieldFilter + " " + operator + " " + valueFilter;
-        if (Log.isDebugEnabled()) Log.debug("script" + EQUAL + script);
+        if (Log.isDebugEnabled()) Log.debug("script=" + script);
         return database.rawQuery(script, null);
     }
 
-    protected Cursor select(SQLiteDatabase database, String fieldFilter, Object valueFilter)
+    private int getMaxId()
+    {
+        String max_id = "max_id";
+        String script = "SELECT max(" + ID + ") " + max_id + " FROM " + getTableName();
+        if (Log.isDebugEnabled()) Log.debug("script=" + script);
+        Cursor cursor = getReadableDatabase().rawQuery(script, null);
+        if (checkCursor(cursor))
+        {
+            return cursor.getInt(cursor.getColumnIndex(max_id));
+        }
+        return GenericDatabase.DATA_NOT_FOUND;
+    }
+
+    private Cursor select(SQLiteDatabase database, String fieldFilter, Object valueFilter)
     {
         return select(database, fieldFilter, valueFilter, EQUAL);
     }
 
-    protected Cursor select(String fieldFilter, Object valueFilter)
+    private Cursor select(String fieldFilter, Object valueFilter)
     {
         return select(getReadableDatabase(), fieldFilter, valueFilter);
     }
 
-    protected Cursor select(String fieldFilter, Object valueFilter, String operator)
+    private Cursor select(String fieldFilter, Object valueFilter, String operator)
     {
         return select(getReadableDatabase(), fieldFilter, valueFilter, operator);
     }
 
-    protected Cursor selectById(Object valueFilter)
+    private Cursor selectById(Object valueFilter)
     {
         return select(ID, valueFilter);
     }
 
-    protected Cursor selectMoreThanId(Object valueFilter)
+    private Cursor selectMoreThanId(Object valueFilter)
     {
         return select(ID, valueFilter, MORE_THAN);
     }
 
-    protected Cursor selectLessThanId(Object valueFilter)
+    private Cursor selectLessThanId(Object valueFilter)
     {
         return select(ID, valueFilter, LESS_THAN);
     }
 
-    protected Cursor selectNotEqualId(Object valueFilter)
+    private Cursor selectNotEqualId(Object valueFilter)
     {
         return select(ID, valueFilter, NOT_EQUAL);
     }
 
-    protected Cursor selectFirst()
+    private Cursor selectFirst()
     {
         return select(getReadableDatabase(), ID, 1);
     }
 
-    protected Cursor selectAll()
+    private Cursor selectAll()
     {
         return selectAll(getReadableDatabase());
     }
 
-    protected Cursor selectAll(SQLiteDatabase database)
+    private Cursor selectAll(SQLiteDatabase database)
     {
         String script = selectColumnsQueryPart();
         if (Log.isDebugEnabled()) Log.debug("script=" + script);
         return database.rawQuery(script, null);
     }
 
-    protected Cursor selectLast(SQLiteDatabase database)
+    private Cursor selectLast(SQLiteDatabase database)
     {
         String script = selectColumnsQueryPart();
         String tableName = getTableName();
-        //script += " LEFT JOIN sync WHERE sync.table_name" + EQUAL + tableName + " AND " + tableName + ".id > sync.sync_id";
-        script += " WHERE " + tableName + ".id "+ MORE_THAN + " (select sync.sync_id from sync where table_name=\'" + tableName + "\')";
-        if (Log.isDebugEnabled()) Log.debug("script=" + script);
+        script += " LEFT JOIN sync WHERE sync.table_name=\'" + tableName + "\' AND " + tableName + ".id > sync.sync_id";
+        //script += " WHERE " + tableName + ".id "+ MORE_THAN + " (select sync.sync_id from sync where table_name=\'" + tableName + "\')";
+        if (Log.isInfoEnabled()) Log.info("script=" + script);
         return database.rawQuery(script, null);
     }
 
-    protected Cursor selectLast()
+    private Cursor selectLast()
     {
         return selectLast(getReadableDatabase());
     }
 
-    public Set<T> getActualBySync(SQLiteDatabase readableDatabase)
+    private Set<T> getActualBySync(SQLiteDatabase readableDatabase)
     {
         return getDataSetFromCursor(readableDatabase, selectLast(readableDatabase));
     }
 
+    @Override
     public T filterBy(String key, Object value)
     {
         return getDataFromCursorWithClosing(select(key, value));
     }
 
+    @Override
     public Set<T> moreThanId(Object id)
     {
         return getDataSetFromCursor(readableDatabase, selectMoreThanId(id));
     }
 
+    @Override
     public Set<T> lessThanId(Object id)
     {
         return getDataSetFromCursor(readableDatabase, selectLessThanId(id));
     }
 
+    @Override
     public Set<T> notEqualId(Object id)
     {
         return getDataSetFromCursor(readableDatabase, selectNotEqualId(id));
     }
 
+    @Override
     public T byId(Object id)
     {
         return getDataFromCursorWithClosing(selectById(id));
     }
 
+    @Override
     public Set<T> getActualBySync()
     {
         return getActualBySync(getReadableDatabase());
     }
 
+    @Override
+    public GenericSync getSyncForUpdate(GenericAccount account)
+    {
+        int maxId = getMaxId();
+        String tableName = getTableName();
+        if (Log.isInfoEnabled()) Log.info("maxId=" + maxId + " for table " + tableName);
+        if (maxId > 0)
+            return new Sync(account.getId(), maxId, tableName);
+        else
+            return new Sync();
+    }
+
+    @Override
     public T getFirst()
     {
         return getDataFromCursorWithClosing(selectFirst());
     }
 
-    public T byId(Integer id)
-    {
-        return getDataFromCursorWithClosing(selectFirst());
-    }
-
-    public Set<T> getAll(SQLiteDatabase readableDatabase)
+    private Set<T> getAll(SQLiteDatabase readableDatabase)
     {
         return getDataSetFromCursor(readableDatabase, selectAll(readableDatabase));
     }
@@ -393,11 +436,9 @@ public abstract class Data<T extends Data> implements GenericData
         do
         {
             T data = getDataFromCursor(cursor);
-            data.setReadableDatabase(readableDatabase);
-            data.setWritableDatabase(writableDatabase);
             setDeviceIfNeeeded(data);
             if (!data.isEmpty()) dataSet.add(data);
-            Log.debug("data" + EQUAL + data + "; cursor" + EQUAL + cursor);
+            Log.debug("data=" + data + "; cursor" + EQUAL + cursor);
             if (!cursor.isLast()) cursor.moveToNext();
             else break;
         } while (!cursor.isClosed());
@@ -408,7 +449,9 @@ public abstract class Data<T extends Data> implements GenericData
 
     private boolean checkCursor(Cursor cursor)
     {
-        if (!cursor.isClosed() && cursor.getCount() > 0){
+        int count = cursor.getCount();
+        if (Log.isInfoEnabled()) Log.info("cursorCount=" + count);
+        if (!cursor.isClosed() && count > 0){
             cursor.moveToFirst();
             return true;
         }
@@ -522,7 +565,7 @@ public abstract class Data<T extends Data> implements GenericData
 
     public boolean isEmpty()
     {
-        return -1 == getId();
+        return GenericDatabase.EMPTY_DATA == getId();
     }
 
     public Integer getId()
@@ -539,7 +582,6 @@ public abstract class Data<T extends Data> implements GenericData
     public native String g();
     public native String h();
     public native String i();
-
     public native String k();
 
     static {
@@ -552,6 +594,8 @@ public abstract class Data<T extends Data> implements GenericData
         data.setCreatedWhen(cursor.getString(cursor.getColumnIndex(CREATED_WHEN)));
         data.setTimezone(cursor.getString(cursor.getColumnIndex(TIMEZONE)));
         data.setDescription(cursor.getString(cursor.getColumnIndex(DESCRIPTION)));
+        if (this.withReadableDatabase() && !data.withReadableDatabase()) data.setReadableDatabase(getReadableDatabase());
+        if (this.withWritableDatabase() && !data.withWritableDatabase()) data.setWritableDatabase(getWritableDatabase());
     }
 
     @Override
@@ -581,37 +625,5 @@ public abstract class Data<T extends Data> implements GenericData
     public int hashCode()
     {
         return getId();
-    }
-
-    @Deprecated
-    public static <T extends Data> Set<T> getDelta(DatabaseHelper localDatabase, Set<T> dataSet)
-    {
-        Integer accountId = localDatabase.device().getAccountId();
-
-        if (dataSet.isEmpty())
-        {
-            if (Log.isWarnEnabled()) Log.warn("no messages in local database");
-            return Collections.emptySet();
-        }
-
-        String tableName = localDatabase.messages().getTableName();
-        Sync sync = localDatabase.getSyncByTableName(tableName);
-
-        Integer syncId = sync.getSyncId();
-        Integer newSyncId = -1;
-
-        //todo: need to use guava
-        Set<T> newDataSet = new LinkedHashSet<>();
-        for (T data : dataSet)
-        {
-            if (!data.isEmpty() && (data.getId() > syncId))
-            {
-                newDataSet.add(data);
-                newSyncId = data.getId();
-            }
-        }
-
-        localDatabase.updateOrInsertSyncIfNeeded(new Sync(accountId, newSyncId, tableName));
-        return newDataSet;
     }
 }

@@ -4,10 +4,15 @@ import android.content.Context;
 import android.service.app.db.Data;
 import android.service.app.db.DataBridge;
 import android.service.app.db.DatabaseHelper;
-import android.service.app.db.data.Gps;
-import android.service.app.db.data.Message;
-import android.service.app.db.inventory.Device;
+import android.service.app.db.GenericData;
+import android.service.app.db.data.GenericGps;
+import android.service.app.db.data.GenericMessage;
+import android.service.app.db.data.impl.Gps;
+import android.service.app.db.data.impl.Message;
+import android.service.app.db.inventory.GenericDevice;
+import android.service.app.db.inventory.impl.Device;
 import android.service.app.db.user.Account;
+import android.service.app.db.user.GenericAccount;
 import android.service.app.http.HttpClient;
 import android.service.app.utils.Log;
 
@@ -28,35 +33,35 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     }
 
     @Override
-    public Set<Message> getMessages(DataFilter s)
+    public Set<GenericMessage> getMessages(DataFilter s)
     {
         return Collections.emptySet();
     }
 
     @Override
-    public Set<Gps> getCoordinates(DataFilter s)
+    public Set<GenericGps> getCoordinates(DataFilter s)
     {
         return Collections.emptySet();
     }
 
     @Override
-    public Account getAccount(DataFilter s)
+    public GenericAccount getAccount(DataFilter s)
     {
         return new Account();
     }
 
     @Override
-    public Set<Device> getDevices(DataFilter s)
+    public Set<GenericDevice> getDevices(DataFilter s)
     {
         return Collections.emptySet();
     }
 
     @Override
-    public RestHttpResponseHandler postMessages(Set<Message> messages)
+    public RestHttpResponseHandler postMessages(Set<GenericMessage> messages)
     {
         RestHttpResponseHandler responseHandler = null;
         Set<JSONObject> jsonObjects = new LinkedHashSet<>();
-        for (Message message: messages)
+        for (GenericMessage message: messages)
         {
             Map<String, Object> data = message.getData();
             data.put(Message.DEVICE_ID, message.getDevice().getName());
@@ -71,17 +76,17 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         return responseHandler;
     }
 
-    private void setSyncId(Data bean, Map<String, Object> data)
+    private void setSyncId(GenericData bean, Map<String, Object> data)
     {
         data.put(Data.SYNCID, bean.getId());
     }
 
     @Override
-    public RestHttpResponseHandler postGps(Set<Gps> gpsSets)
+    public RestHttpResponseHandler postGps(Set<GenericGps> gpsSets)
     {
         RestHttpResponseHandler responseHandler = null;
         Set<JSONObject> jsonObjects = new LinkedHashSet<>();
-        for (Gps gps: gpsSets)
+        for (GenericGps gps: gpsSets)
         {
             Map<String, Object> data = gps.getData();
             //todo: need to refactor
@@ -97,7 +102,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     }
 
     @Override
-    public RestHttpResponseHandler postAccount(Account account)
+    public RestHttpResponseHandler postAccount(GenericAccount account)
     {
         Map<String, Object> data = account.getData();
         JSONObject jsonObject = new JSONObject(data);
@@ -109,7 +114,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     }
 
     @Override
-    public RestHttpResponseHandler postDevice(Device device)
+    public RestHttpResponseHandler postDevice(GenericDevice device)
     {
         Map<String, Object> data = device.getData();
         data.put(Device.ACCOUNT_ID, device.getAccount().getEmail());

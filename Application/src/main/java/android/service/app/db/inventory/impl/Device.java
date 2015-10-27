@@ -1,10 +1,12 @@
-package android.service.app.db.inventory;
+package android.service.app.db.inventory.impl;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.service.app.db.Data;
 import android.service.app.db.DatabaseHelper;
-import android.service.app.db.user.Account;
+import android.service.app.db.GenericDatabase;
+import android.service.app.db.inventory.GenericDevice;
+import android.service.app.db.user.GenericAccount;
 import android.support.annotation.NonNull;
 
 import java.util.Collections;
@@ -12,10 +14,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Device extends Data<Device>
+public class Device extends Data<GenericDevice> implements GenericDevice
 {
     private String name = "";
-    private int account_id = -2;
+    private int account_id = GenericDatabase.EMPTY_DATA;
 
     private static final String table_name = "device";
     public static final String NAME = "name";
@@ -62,9 +64,9 @@ public class Device extends Data<Device>
     }
 
     @NonNull
-    protected Device getDataFromCursor(Cursor cursor)
+    protected GenericDevice getDataFromCursor(Cursor cursor)
     {
-        Device data = new Device();
+        GenericDevice data = new Device();
         data.setName(cursor.getString(cursor.getColumnIndex(NAME)));
         data.setAccountId(cursor.getInt(cursor.getColumnIndex(ACCOUNT_ID)));
         fillGenericByCursor(data, cursor);
@@ -72,9 +74,9 @@ public class Device extends Data<Device>
     }
 
     @Override
-    protected Device emptyData()
+    protected GenericDevice emptyData()
     {
-        return DatabaseHelper.DEVICE;
+        return new Device();
     }
 
     public Device()
@@ -93,29 +95,34 @@ public class Device extends Data<Device>
         this.account_id = account_id;
     }
 
+    @Override
     public void setName(String name)
     {
         this.name = name;
     }
 
+    @Override
     public void setAccountId(int account_id)
     {
         this.account_id = account_id;
     }
 
+    @Override
     public String getName()
     {
         return name;
     }
 
+    @Override
     public int getAccountId()
     {
         return account_id;
     }
 
-    public Account getAccount()
+    @Override
+    public GenericAccount getAccount()
     {
-        Account account = DatabaseHelper.ACCOUNT;
+        GenericAccount account = DatabaseHelper.ACCOUNT;
         account.setReadableDatabase(getReadableDatabase());
         return account.getFirst();
     }

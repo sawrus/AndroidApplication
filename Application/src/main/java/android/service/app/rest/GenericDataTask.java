@@ -5,11 +5,20 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.service.app.db.DatabaseHelper;
+import android.service.app.db.GenericData;
+import android.service.app.db.GenericDatabase;
+import android.service.app.db.data.GenericGps;
+import android.service.app.db.data.GenericMessage;
+import android.service.app.db.inventory.GenericDevice;
+import android.service.app.db.sync.GenericSync;
+import android.service.app.db.user.GenericAccount;
 import android.service.app.json.RestBridge;
 import android.support.annotation.NonNull;
 
+import java.util.Set;
+
 @TargetApi(Build.VERSION_CODES.CUPCAKE)
-public abstract class GenericDataTask<Input> extends AsyncTask<Input, Void, SyncOutput>
+public abstract class GenericDataTask<Input> extends AsyncTask<Input, Void, SyncOutput> implements GenericDatabase
 {
     protected final DatabaseHelper localDatabase;
     private final CallbackHandler<SyncOutput> handler;
@@ -44,6 +53,54 @@ public abstract class GenericDataTask<Input> extends AsyncTask<Input, Void, Sync
                 ", handler=" + handler +
                 ", restBridge=" + restBridge +
                 '}';
+    }
+
+    @Override
+    public <T extends GenericData> int insert(T data)
+    {
+        return localDatabase.insert(data);
+    }
+
+    @Override
+    public <T extends GenericData> int insert(Set<T> data)
+    {
+        return localDatabase.insert(data);
+    }
+
+    @Override
+    public GenericDevice devices()
+    {
+        return localDatabase.devices();
+    }
+
+    @Override
+    public GenericAccount account()
+    {
+        return localDatabase.account();
+    }
+
+    @Override
+    public GenericMessage messages()
+    {
+        return localDatabase.messages();
+    }
+
+    @Override
+    public GenericSync sync_points()
+    {
+        return localDatabase.sync_points();
+    }
+
+    @Override
+    public GenericGps coordinates()
+    {
+        return localDatabase.coordinates();
+    }
+
+    @Override
+    public void updateOrInsertSyncIfNeeded(GenericSync newSync)
+    {
+        localDatabase.updateOrInsertSyncIfNeeded(newSync);
     }
 }
 

@@ -1,10 +1,11 @@
-package android.service.app.db.sync;
+package android.service.app.db.sync.impl;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.service.app.db.Data;
 import android.service.app.db.DatabaseHelper;
+import android.service.app.db.sync.GenericSync;
 import android.service.app.utils.Log;
 
 import java.util.Collections;
@@ -12,7 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Sync extends Data<Sync>
+public class Sync extends Data<GenericSync> implements GenericSync
 {
     private int account_id = -3;
     private int sync_id = -2;
@@ -98,7 +99,7 @@ public class Sync extends Data<Sync>
     @Override
     protected Sync emptyData()
     {
-        return DatabaseHelper.SYNC;
+        return new Sync();
     }
 
     @Override
@@ -126,7 +127,8 @@ public class Sync extends Data<Sync>
         };
     }
 
-    public void update(SQLiteDatabase database, Sync oldSync, Sync newSync)
+    @Override
+    public void update(SQLiteDatabase database, GenericSync oldSync, GenericSync newSync)
     {
         if (Log.isDebugEnabled()) Log.debug("update:oldSync=" + oldSync);
         if (Log.isDebugEnabled()) Log.debug("update:newSync=" + newSync);
@@ -142,9 +144,9 @@ public class Sync extends Data<Sync>
         }
     }
 
-    protected Sync getDataFromCursor(Cursor cursor)
+    protected GenericSync getDataFromCursor(Cursor cursor)
     {
-        Sync data = new Sync();
+        GenericSync data = new Sync();
         data.setAccountId(cursor.getInt(cursor.getColumnIndex(ACCOUNT_ID)));
         data.setSyncId(cursor.getInt(cursor.getColumnIndex(SYNC_ID)));
         data.setTable(cursor.getString(cursor.getColumnIndex(TABLE)));

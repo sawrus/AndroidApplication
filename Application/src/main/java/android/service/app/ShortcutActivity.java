@@ -9,6 +9,8 @@ public class ShortcutActivity extends Activity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        //todo: check preference
+
         Intent HomeScreenShortCut = new Intent(getApplicationContext(),
                 MainActivity.class);
 

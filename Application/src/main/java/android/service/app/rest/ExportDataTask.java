@@ -26,9 +26,6 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
             GenericAccount account = accounts().getFirst();
             GenericDevice device = devices().getFirst();
 
-            updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
-            updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
-
             Set<GenericMessage> actualMessagesBySync = messages().getActualBySync();
             Set<GenericGps> actualCoordinatesBySync = coordinates().getActualBySync();
 
@@ -41,6 +38,9 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
             restBridge.postDevice(device);
             restBridge.postMessages(actualMessagesBySync);
             restBridge.postGps(actualCoordinatesBySync);
+
+            updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
+            updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
         } catch (Exception e)
         {
             AndroidUtils.handleExceptionWithoutThrow(e);

@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.service.app.gps.GpsService;
+import android.service.app.ui.SettingsActivity;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
@@ -32,6 +33,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.prefs.Preferences;
 
 public class MainActivity extends Activity
 {
@@ -241,6 +243,10 @@ public class MainActivity extends Activity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings)
         {
+            Intent settingsActivity = new Intent(getBaseContext(),
+                    SettingsActivity.class);
+            startActivity(settingsActivity);
+
             return true;
         }
 

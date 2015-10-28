@@ -1,39 +1,47 @@
-package android.service.app.db;
+package android.service.app.db.sqllite;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.service.app.db.data.GenericGps;
-import android.service.app.db.inventory.impl.Device;
-import android.service.app.db.inventory.GenericDevice;
-import android.service.app.db.sync.GenericSync;
-import android.service.app.db.sync.impl.Sync;
-import android.service.app.db.user.Account;
-import android.service.app.db.user.GenericAccount;
+import android.service.app.db.GenericDatabase;
+import android.service.app.db.data.DeviceDependable;
+import android.service.app.db.data.GenericAccount;
+import android.service.app.db.data.GenericData;
+import android.service.app.db.data.GenericDataApi;
+import android.service.app.db.data.GenericDevice;
+import android.service.app.db.data.GenericSync;
+import android.service.app.db.data.impl.Device;
+import android.service.app.db.data.impl.Sync;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class Data<T extends GenericData> implements GenericData<T>
+public abstract class SqlLiteData<T extends GenericData> implements SqlLiteApi<T>
 {
-    protected static final String INTEGER = "INTEGER";
-    protected static final String DOUBLE = "DOUBLE";
-    protected static final String INTEGER_PRIMARY_KEY = "INTEGER PRIMARY KEY";
-    protected static final String INTEGER_PRIMARY_KEY_AUTOINCREMENT = "INTEGER PRIMARY KEY AUTOINCREMENT";
+    //SQL Lite general api
+    @Override
+    public abstract Set<String> getFields();
 
-    protected static final String TEXT = "TEXT";
-    protected static final String DATETIME = "DATETIME";
+    @Override
+    public abstract String getTableName();
+
+    @Override
+    public abstract String generateCreateTableScript();
+
+    @Override
+    public abstract String generateDropTableScript();
+
+    @Override
+    public abstract T emptyData();
+
+    @Override
+    public abstract T getDataFromCursor(Cursor cursor);
 
     public static final String ID = "id";
     public static final String SYNCID = "syncid";
@@ -47,23 +55,37 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
     public static final String NOT_EQUAL = "!=";
     public static final String GMT_TIME_ZONE = "GMT";
 
-    private SQLiteDatabase readableDatabase = null;
-    private SQLiteDatabase writableDatabase = null;
-
-    private int id = GenericDatabase.EMPTY_DATA;
-    private String description = "";
-    private String created_when = getCoordinatedUniversalDateTime();
-    private String timezone = TimeZone.getDefault().getID() ;
-
-    private static final Map<String, String> fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>(){
-        {put(ID, INTEGER_PRIMARY_KEY);}
-        {put(DESCRIPTION, TEXT);}
-        {put(TIMEZONE, TEXT);}
-        {put(CREATED_WHEN, TEXT);}
-    });
+    protected static final String INTEGER = "INTEGER";
+    protected static final String DOUBLE = "DOUBLE";
+    protected static final String INTEGER_PRIMARY_KEY = "INTEGER PRIMARY KEY";
+    protected static final String INTEGER_PRIMARY_KEY_AUTOINCREMENT = "INTEGER PRIMARY KEY AUTOINCREMENT";
+    protected static final String TEXT = "TEXT";
+    protected static final String DATETIME = "DATETIME";
 
     public static GenericDevice device = new Device();
     private static AtomicBoolean wasInitiatedEarlier = new AtomicBoolean(false);
+
+    private SQLiteDatabase readableDatabase = null;
+    private SQLiteDatabase writableDatabase = null;
+
+    private static final Map<String, String> fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>()
+    {
+        {
+            put(ID, INTEGER_PRIMARY_KEY);
+        }
+
+        {
+            put(DESCRIPTION, TEXT);
+        }
+
+        {
+            put(TIMEZONE, TEXT);
+        }
+
+        {
+            put(CREATED_WHEN, TEXT);
+        }
+    });
 
     public boolean isWasInitiatedEarlier()
     {
@@ -74,84 +96,30 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
     {
         if (readableDatabase != null && device.isEmpty() && this instanceof DeviceDependable)
         {
-            device = initDevices(readableDatabase).getFirst();
+            device = initDevices(readableDatabase);
             if (!device.isEmpty() && !isWasInitiatedEarlier()) wasInitiatedEarlier.set(true);
         }
     }
 
-
-    @Override
-    public void setId(Integer id)
-    {
-        this.id = id;
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return description;
-    }
-
-    @Override
-    public void setDescription(String description)
-    {
-        this.description = description;
-    }
-
-    @Override
-    public String getTimezone()
-    {
-        return timezone;
-    }
-
-    @Override
-    public void setTimezone(String timezone)
-    {
-        this.timezone = timezone;
-    }
-
-    @Override
-    public String getCreatedWhen()
-    {
-        return created_when;
-    }
-
-    @Override
-    public void setCreatedWhen(String created_when)
-    {
-        this.created_when = created_when;
-    }
-
-    private String getCoordinatedUniversalDateTime()
-    {
-        Calendar c = Calendar.getInstance();
-        c.setTimeZone(TimeZone.getTimeZone(GMT_TIME_ZONE));
-        Date date = c.getTime();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        return dateFormat.format(date);
-    }
-
-    public Data(SQLiteDatabase readableDatabase, SQLiteDatabase writableDatabase)
+    public SqlLiteData(SQLiteDatabase readableDatabase, SQLiteDatabase writableDatabase)
     {
         this.readableDatabase = readableDatabase;
         this.writableDatabase = writableDatabase;
     }
 
-    public Data(SQLiteDatabase readableDatabase)
+    public SqlLiteData(SQLiteDatabase readableDatabase)
     {
         this.readableDatabase = readableDatabase;
     }
 
-    public synchronized GenericData<T> setReadableDatabase(SQLiteDatabase readableDatabase)
+    public void setReadableDatabase(SQLiteDatabase readableDatabase)
     {
         this.readableDatabase = readableDatabase;
-        return this;
     }
 
-    public synchronized GenericData<T> setWritableDatabase(SQLiteDatabase writableDatabase)
+    public void setWritableDatabase(SQLiteDatabase writableDatabase)
     {
         this.writableDatabase = writableDatabase;
-        return this;
     }
 
     protected SQLiteDatabase getReadableDatabase()
@@ -177,7 +145,7 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
         return writableDatabase != null;
     }
 
-    public Data()
+    public SqlLiteData()
     {
         //init();
     }
@@ -185,21 +153,17 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
     protected static String generateCreateTableScript(String tableName, Map<String, String> fields)
     {
         LinkedHashMap<String, String> _fields = new LinkedHashMap<>(fields);
-        _fields.putAll(Data.fields);
+        _fields.putAll(SqlLiteData.fields);
         String script = "CREATE TABLE " + tableName + " (";
         for (Map.Entry<String, String> filed : _fields.entrySet())
             script += filed.getKey() + " " + filed.getValue() + ",";
         return script.substring(0, script.lastIndexOf(",")) + ")";
     }
 
-    public abstract String generateCreateTableScript();
-
     protected static String generateDropTableScript(String tableName)
     {
         return "DROP TABLE " + tableName;
     }
-
-    public abstract String generateDropTableScript();
 
     protected static int insert(SQLiteDatabase database, String tableName, ContentValues values)
     {
@@ -211,7 +175,6 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
         return insert(database, getTableName(), getContentValues());
     }
 
-    @Override
     public int insert()
     {
         return insert(getWritableDatabase(), getTableName(), getContentValues());
@@ -219,42 +182,27 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
 
     public int insert(T data)
     {
-        if (!data.withReadableDatabase())
-            data.setReadableDatabase(getReadableDatabase());
-        if (!data.withWritableDatabase())
-            data.setWritableDatabase(getWritableDatabase());
+        if (data instanceof SqlLiteApi)
+        {
+            SqlLiteApi sqlLiteData = (SqlLiteApi) data;
+            if (!sqlLiteData.withReadableDatabase())
+                sqlLiteData.setReadableDatabase(getReadableDatabase());
+            if (!sqlLiteData.withWritableDatabase())
+                sqlLiteData.setWritableDatabase(getWritableDatabase());
+        }
         return data.insert();
     }
 
     public int insert(Set<T> dataSet)
     {
         int result = GenericDatabase.DATA_NOT_FOUND;
-        for (T data: dataSet)
-        {
-            data.setReadableDatabase(getReadableDatabase());
-            data.setWritableDatabase(getWritableDatabase());
-            result = data.insert();
-        }
-
+        for (T data: dataSet) result = insert(data);
         return result;
     }
 
-    @Override
     public Map<String, Object> getData()
     {
-        //checkOnEmptyAndThrowException();
-        return new LinkedHashMap<String, Object>()
-        {
-            //{put(ID, getId());}
-            {put(DESCRIPTION, getDescription());}
-            {put(TIMEZONE, getTimezone());}
-            {put(CREATED_WHEN, getCreatedWhen());}
-        };
-    }
-
-    private void checkOnEmptyAndThrowException()
-    {
-        if (isEmpty()) throw new IllegalStateException("stub mode for data: " + this.toString());
+        return Collections.emptyMap();
     }
 
     @NonNull
@@ -400,7 +348,6 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
         return getActualBySync(getReadableDatabase());
     }
 
-    @Override
     public GenericSync getSyncForUpdate(GenericAccount account)
     {
         int maxId = getMaxId();
@@ -464,9 +411,11 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
     }
 
     @NonNull
-    private Device initDevices(SQLiteDatabase readableDatabase)
+    private GenericDevice initDevices(SQLiteDatabase readableDatabase)
     {
-        return new Device(readableDatabase);
+        SqlLiteApi<GenericDevice> api = (SqlLiteApi<GenericDevice>) SqlLiteDatabaseHelper.DEVICE;
+        api.setReadableDatabase(readableDatabase);
+        return api.getFirst();
     }
 
     private T getDataFromCursorWithClosing(Cursor cursor)
@@ -488,16 +437,12 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
             ((DeviceDependable) data).setDevice(device);
     }
 
-    protected abstract T emptyData();
-
-    protected abstract T getDataFromCursor(Cursor cursor);
-
     @NonNull
     private String selectColumnsQueryPart()
     {
         String script = "SELECT ";
         Set<String> fields = new LinkedHashSet<>(getFields());
-        fields.addAll(Data.fields.keySet());
+        fields.addAll(SqlLiteData.fields.keySet());
         String tableName = getTableName();
 
         for (String field : fields)
@@ -549,43 +494,9 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
         return delete(ID, String.valueOf(1));
     }
 
-    protected Object deleteAll(SQLiteDatabase database)
-    {
-        return delete(ID, String.valueOf(0), MORE_THAN);
-    }
-
     protected Object deleteAll()
     {
-        return delete(ID, String.valueOf(1));
-    }
-
-    protected abstract Set<String> getFields();
-
-    public abstract String getTableName();
-
-    public boolean isEmpty()
-    {
-        return GenericDatabase.EMPTY_DATA == getId();
-    }
-
-    public Integer getId()
-    {
-        return id;
-    }
-
-    public native String a();
-    public native String b();
-    public native String c();
-    public native String d();
-    public native String e();
-    public native String f();
-    public native String g();
-    public native String h();
-    public native String i();
-    public native String k();
-
-    static {
-        System.loadLibrary("Application");
+        return delete(ID, String.valueOf(0), MORE_THAN);
     }
 
     protected void fillGenericByCursor(T data, Cursor cursor)
@@ -594,36 +505,14 @@ public abstract class Data<T extends GenericData> implements GenericData<T>
         data.setCreatedWhen(cursor.getString(cursor.getColumnIndex(CREATED_WHEN)));
         data.setTimezone(cursor.getString(cursor.getColumnIndex(TIMEZONE)));
         data.setDescription(cursor.getString(cursor.getColumnIndex(DESCRIPTION)));
-        if (this.withReadableDatabase() && !data.withReadableDatabase()) data.setReadableDatabase(getReadableDatabase());
-        if (this.withWritableDatabase() && !data.withWritableDatabase()) data.setWritableDatabase(getWritableDatabase());
-    }
 
-    @Override
-    public String toString()
-    {
-        return "Data{" +
-                "id=" + id +
-                ", description='" + description + '\'' +
-                ", created_when='" + created_when + '\'' +
-                ", timezone='" + timezone + '\'' +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Data<?> data = (Data<?>) o;
-
-        return getId() == data.getId();
-
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return getId();
+        if (data instanceof SqlLiteApi)
+        {
+            SqlLiteApi sqlLiteData = (SqlLiteApi) data;
+            if (this.withReadableDatabase() && !sqlLiteData.withReadableDatabase())
+                sqlLiteData.setReadableDatabase(getReadableDatabase());
+            if (this.withWritableDatabase() && !sqlLiteData.withWritableDatabase())
+                sqlLiteData.setWritableDatabase(getWritableDatabase());
+        }
     }
 }

@@ -1,6 +1,4 @@
-package android.service.app.db;
-
-import android.service.app.db.inventory.GenericDevice;
+package android.service.app.db.data;
 
 /**
  * Defines methods for entities which could be linked with watched device

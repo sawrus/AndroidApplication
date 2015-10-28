@@ -1,11 +1,9 @@
-package android.service.app.db.sync.impl;
+package android.service.app.db.data.impl;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.service.app.db.Data;
-import android.service.app.db.DatabaseHelper;
-import android.service.app.db.sync.GenericSync;
+import android.service.app.db.data.GenericSync;
 import android.service.app.utils.Log;
 
 import java.util.Collections;
@@ -97,13 +95,13 @@ public class Sync extends Data<GenericSync> implements GenericSync
     }
 
     @Override
-    protected Sync emptyData()
+    public Sync emptyData()
     {
         return new Sync();
     }
 
     @Override
-    protected Set<String> getFields()
+    public Set<String> getFields()
     {
         return fields.keySet();
     }
@@ -144,7 +142,8 @@ public class Sync extends Data<GenericSync> implements GenericSync
         }
     }
 
-    protected GenericSync getDataFromCursor(Cursor cursor)
+    @Override
+    public GenericSync getDataFromCursor(Cursor cursor)
     {
         GenericSync data = new Sync();
         data.setAccountId(cursor.getInt(cursor.getColumnIndex(ACCOUNT_ID)));

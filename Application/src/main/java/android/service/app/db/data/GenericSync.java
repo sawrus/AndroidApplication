@@ -1,9 +1,8 @@
-package android.service.app.db.sync;
+package android.service.app.db.data;
 
 import android.database.sqlite.SQLiteDatabase;
-import android.service.app.db.GenericData;
 
-public interface GenericSync extends GenericData<GenericSync>
+public interface GenericSync extends GenericData
 {
     int getAccountId();
     int getSyncId();

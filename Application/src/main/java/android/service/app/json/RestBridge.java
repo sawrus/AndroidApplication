@@ -1,18 +1,18 @@
 package android.service.app.json;
 
 import android.content.Context;
-import android.service.app.db.Data;
+import android.service.app.db.data.impl.Data;
 import android.service.app.db.DataBridge;
-import android.service.app.db.DatabaseHelper;
-import android.service.app.db.GenericData;
+import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
+import android.service.app.db.data.GenericData;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
 import android.service.app.db.data.impl.Gps;
 import android.service.app.db.data.impl.Message;
-import android.service.app.db.inventory.GenericDevice;
-import android.service.app.db.inventory.impl.Device;
-import android.service.app.db.user.Account;
-import android.service.app.db.user.GenericAccount;
+import android.service.app.db.data.GenericDevice;
+import android.service.app.db.data.impl.Device;
+import android.service.app.db.data.impl.Account;
+import android.service.app.db.data.GenericAccount;
 import android.service.app.http.HttpClient;
 import android.service.app.utils.Log;
 
@@ -72,7 +72,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         }
 
         if (Log.isInfoEnabled()) Log.info("Message.jsonObjects=" + jsonObjects);
-        HttpClient.postJson(context, DatabaseHelper.MESSAGE.getTableName(), jsonObjects, responseHandler);
+        HttpClient.postJson(context, Message.table_name, jsonObjects, responseHandler);
         return responseHandler;
     }
 
@@ -97,7 +97,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         }
 
         if (Log.isInfoEnabled()) Log.info("Gps.jsonObjects=" + jsonObjects);
-        HttpClient.postJson(context, DatabaseHelper.GPS.getTableName(), jsonObjects, responseHandler);
+        HttpClient.postJson(context, Gps.table_name, jsonObjects, responseHandler);
         return responseHandler;
     }
 
@@ -109,7 +109,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         if (Log.isInfoEnabled()) Log.info("Account.jsonObject=" + jsonObject);
 
         RestHttpResponseHandler responseHandler = new RestHttpResponseHandler();
-        HttpClient.postJson(context, DatabaseHelper.ACCOUNT.getTableName(), jsonObject, responseHandler);
+        HttpClient.postJson(context, Account.table_name, jsonObject, responseHandler);
         return responseHandler;
     }
 
@@ -121,7 +121,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         JSONObject jsonObject = new JSONObject(data);
         if (Log.isInfoEnabled()) Log.info("Device.jsonObject=" + jsonObject);
         RestHttpResponseHandler responseHandler = new RestHttpResponseHandler();
-        HttpClient.postJson(context, DatabaseHelper.DEVICE.getTableName(), jsonObject, responseHandler);
+        HttpClient.postJson(context, Device.table_name, jsonObject, responseHandler);
         return responseHandler;
     }
 }

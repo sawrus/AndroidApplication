@@ -7,13 +7,14 @@ import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.service.app.db.Database;
+import android.service.app.db.data.GenericAccount;
+import android.service.app.db.sqllite.SqlLiteDatabase;
 import android.service.app.db.data.impl.Message;
-import android.service.app.db.inventory.GenericDevice;
-import android.service.app.db.inventory.impl.Device;
-import android.service.app.db.sync.GenericSync;
-import android.service.app.db.sync.impl.Sync;
-import android.service.app.db.user.Account;
+import android.service.app.db.data.GenericDevice;
+import android.service.app.db.data.impl.Device;
+import android.service.app.db.data.GenericSync;
+import android.service.app.db.data.impl.Sync;
+import android.service.app.db.data.impl.Account;
 import android.service.app.rest.ImportDataTask;
 import android.service.app.rest.SyncOutput;
 import android.service.app.rest.ExportDataTask;
@@ -57,7 +58,7 @@ public class Service extends android.app.Service
     {
         if (device == null)
         {
-            Database.DatabaseWork databaseWork = new Database.DatabaseWork(getApplicationContext())
+            SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(getApplicationContext())
             {
                 @Override
                 public Object execute()
@@ -110,12 +111,12 @@ public class Service extends android.app.Service
     public static void initDatabase(final Context context)
     {
         if (Log.isInfoEnabled()) Log.info("initDatabase");
-        //Database.clear(context);
+        //SqlLiteDatabase.clear(context);
 
         TelephonyManager tm = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
         final String phoneNumber = tm.getLine1Number();
 
-        Database.DatabaseWork databaseWork = new Database.DatabaseWork(context){
+        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
             @Override
             public Object execute()
             {
@@ -128,9 +129,13 @@ public class Service extends android.app.Service
                     GenericDevice device = new Device(AndroidUtils.getDeviceName(), accountId);
                     int deviceId = insert(device);
 
-                    GenericSync sync = new Sync(accountId, deviceId, device.getTableName());
+                    GenericSync sync = new Sync(accountId, deviceId, Device.table_name);
                     updateOrInsertSyncIfNeeded(sync);
                     //todo: need to parse this parameters from settings
+
+                    GenericAccount account = accounts().getFirst();
+                    updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
+                    updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
                 }
 
                 if (Log.isInfoEnabled()) Log.info("actualMessages=" + messages().getActualBySync());
@@ -143,7 +148,7 @@ public class Service extends android.app.Service
 
     private static void runSync(final Context context)
     {
-        Database.DatabaseWork databaseWork = new Database.DatabaseWork(context){
+        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
             @Override
             public Object execute()
             {
@@ -181,7 +186,7 @@ public class Service extends android.app.Service
 
     private void saveMessageInDatabase(final String address, final boolean incoming, final String body)
     {
-        Database.DatabaseWork databaseWork = new Database.DatabaseWork(getApplicationContext()){
+        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(getApplicationContext()){
             @Override
             public Object execute()
             {

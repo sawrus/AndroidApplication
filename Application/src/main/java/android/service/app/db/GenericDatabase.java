@@ -1,10 +1,12 @@
 package android.service.app.db;
 
+import android.service.app.db.data.GenericAccount;
+import android.service.app.db.data.GenericData;
+import android.service.app.db.data.GenericDataApi;
+import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
-import android.service.app.db.inventory.GenericDevice;
-import android.service.app.db.sync.GenericSync;
-import android.service.app.db.user.GenericAccount;
+import android.service.app.db.data.GenericSync;
 
 import java.util.Set;
 
@@ -17,15 +19,15 @@ public interface GenericDatabase
     <T extends GenericData> int insert(T data);
     <T extends GenericData> int insert(Set<T> data);
 
-    GenericDevice devices();
+    GenericDataApi<GenericDevice> devices();
 
-    GenericAccount account();
+    GenericDataApi<GenericAccount> accounts();
 
-    GenericMessage messages();
+    GenericDataApi<GenericMessage> messages();
 
-    GenericGps coordinates();
+    GenericDataApi<GenericGps> coordinates();
 
-    GenericSync sync_points();
+    GenericDataApi<GenericSync> points();
 
     void updateOrInsertSyncIfNeeded(GenericSync newSync);
 }

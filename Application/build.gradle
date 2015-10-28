@@ -27,6 +27,8 @@ dependencies {
 
     compile group: 'com.google.guava', name: 'guava', version: '15.0'
 
+    //compile 'io.realm:realm-android:0.84.0'
+
 // libraries for async requests to mongo:
 //    compile 'io.netty:netty-all:4.0.28.Final'
 //    compile 'org.mongodb:mongo-java-driver:3.0.3'

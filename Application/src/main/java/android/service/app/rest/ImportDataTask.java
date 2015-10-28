@@ -1,15 +1,11 @@
 package android.service.app.rest;
 
 import android.content.Context;
-import android.service.app.db.DatabaseHelper;
+import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
-import android.service.app.db.data.impl.Gps;
-import android.service.app.db.data.impl.Message;
-import android.service.app.db.inventory.GenericDevice;
-import android.service.app.db.inventory.impl.Device;
-import android.service.app.db.user.Account;
-import android.service.app.db.user.GenericAccount;
+import android.service.app.db.data.GenericDevice;
+import android.service.app.db.data.GenericAccount;
 import android.service.app.json.DataFilter;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
@@ -18,7 +14,7 @@ import java.util.Set;
 
 public class ImportDataTask<Input> extends GenericDataTask<Input>
 {
-    public ImportDataTask(DatabaseHelper localDatabase, Context context, CallbackHandler<SyncOutput> handler)
+    public ImportDataTask(SqlLiteDatabaseHelper localDatabase, Context context, CallbackHandler<SyncOutput> handler)
     {
         super(localDatabase, context, handler);
     }

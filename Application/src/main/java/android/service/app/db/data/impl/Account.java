@@ -1,11 +1,8 @@
-package android.service.app.db.user;
+package android.service.app.db.data.impl;
 
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.service.app.db.Data;
-import android.service.app.db.DatabaseHelper;
 import android.service.app.db.GenericDatabase;
-import android.service.app.db.inventory.GenericDevice;
+import android.service.app.db.data.GenericAccount;
 import android.support.annotation.NonNull;
 
 import java.util.Collections;
@@ -17,7 +14,7 @@ public class Account extends Data<GenericAccount> implements GenericAccount
 {
     private String email = GenericDatabase.EMPTY_EMAIL;
 
-    private static final String table_name = "account";
+    public static final String table_name = "account";
     public static final String EMAIL = "email";
     private static final Map<String, String> fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>()
     {
@@ -27,7 +24,7 @@ public class Account extends Data<GenericAccount> implements GenericAccount
     });
 
     @Override
-    protected Set<String> getFields()
+    public Set<String> getFields()
     {
         return fields.keySet();
     }
@@ -61,7 +58,7 @@ public class Account extends Data<GenericAccount> implements GenericAccount
     }
 
     @NonNull
-    protected GenericAccount getDataFromCursor(Cursor cursor)
+    public GenericAccount getDataFromCursor(Cursor cursor)
     {
         GenericAccount data = new Account();
         data.setEmail(cursor.getString(cursor.getColumnIndex(EMAIL)));
@@ -70,7 +67,7 @@ public class Account extends Data<GenericAccount> implements GenericAccount
     }
 
     @Override
-    protected GenericAccount emptyData()
+    public GenericAccount emptyData()
     {
         return new Account();
     }

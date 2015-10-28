@@ -1,12 +1,9 @@
 package android.service.app.db.data.impl;
 
 import android.database.Cursor;
-import android.service.app.db.Data;
-import android.service.app.db.DatabaseHelper;
-import android.service.app.db.DeviceDependable;
+import android.service.app.db.data.DeviceDependable;
 import android.service.app.db.data.GenericGps;
-import android.service.app.db.inventory.impl.Device;
-import android.service.app.db.inventory.GenericDevice;
+import android.service.app.db.data.GenericDevice;
 import android.support.annotation.NonNull;
 
 import java.util.Collections;
@@ -21,7 +18,7 @@ public class Gps extends Data<GenericGps> implements DeviceDependable, GenericGp
     private double longitude = -3;
     private GenericDevice device = new Device();
 
-    private static final String table_name = "gps";
+    public static final String table_name = "gps";
     public static final String DEVICE_ID = "device_id";
     public static final String LATITUDE = "latitude";
     public static final String LONGITUDE = "longitude";
@@ -79,7 +76,7 @@ public class Gps extends Data<GenericGps> implements DeviceDependable, GenericGp
     }
 
     @Override
-    protected Set<String> getFields()
+    public Set<String> getFields()
     {
         return fields.keySet();
     }
@@ -140,7 +137,7 @@ public class Gps extends Data<GenericGps> implements DeviceDependable, GenericGp
     }
 
     @NonNull
-    protected GenericGps getDataFromCursor(Cursor cursor)
+    public GenericGps getDataFromCursor(Cursor cursor)
     {
         Gps data = new Gps();
         data.setId(cursor.getInt(cursor.getColumnIndex(ID)));
@@ -152,7 +149,7 @@ public class Gps extends Data<GenericGps> implements DeviceDependable, GenericGp
     }
 
     @Override
-    protected GenericGps emptyData()
+    public GenericGps emptyData()
     {
         return new Gps();
     }

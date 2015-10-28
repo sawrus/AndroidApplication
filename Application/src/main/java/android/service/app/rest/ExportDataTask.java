@@ -1,11 +1,11 @@
 package android.service.app.rest;
 
 import android.content.Context;
-import android.service.app.db.DatabaseHelper;
+import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
-import android.service.app.db.inventory.GenericDevice;
-import android.service.app.db.user.GenericAccount;
+import android.service.app.db.data.GenericDevice;
+import android.service.app.db.data.GenericAccount;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
 
@@ -13,7 +13,7 @@ import java.util.Set;
 
 public class ExportDataTask<Input> extends GenericDataTask<Input>
 {
-    public ExportDataTask(DatabaseHelper localDatabase, Context context, CallbackHandler<SyncOutput> handler)
+    public ExportDataTask(SqlLiteDatabaseHelper localDatabase, Context context, CallbackHandler<SyncOutput> handler)
     {
         super(localDatabase, context, handler);
     }
@@ -23,7 +23,7 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
     {
         try
         {
-            GenericAccount account = account().getFirst();
+            GenericAccount account = accounts().getFirst();
             GenericDevice device = devices().getFirst();
 
             updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));

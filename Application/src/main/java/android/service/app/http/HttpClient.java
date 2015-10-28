@@ -2,7 +2,7 @@ package android.service.app.http;
 
 import android.content.Context;
 import android.os.Looper;
-import android.service.app.db.DatabaseHelper;
+import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -20,9 +20,9 @@ public enum  HttpClient
 {
     instance;
 
-    private static final String HOST = DatabaseHelper.EMPTY.h();
-    private static final String PORT = DatabaseHelper.EMPTY.i();
-    private static final String PROTOCOL = DatabaseHelper.EMPTY.k();
+    private static final String HOST = SqlLiteDatabaseHelper.EMPTY.h();
+    private static final String PORT = SqlLiteDatabaseHelper.EMPTY.i();
+    private static final String PROTOCOL = SqlLiteDatabaseHelper.EMPTY.k();
     private static final String BASE_URL = PROTOCOL + "://" + HOST + ":" + PORT + "/";
     public static final String CHARSET = "charset=utf-8";
     public static final int MAX_CONNECTIONS = 1;

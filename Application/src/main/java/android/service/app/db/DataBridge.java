@@ -2,12 +2,8 @@ package android.service.app.db;
 
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
-import android.service.app.db.data.impl.Gps;
-import android.service.app.db.data.impl.Message;
-import android.service.app.db.inventory.GenericDevice;
-import android.service.app.db.inventory.impl.Device;
-import android.service.app.db.user.Account;
-import android.service.app.db.user.GenericAccount;
+import android.service.app.db.data.GenericDevice;
+import android.service.app.db.data.GenericAccount;
 
 import java.util.Set;
 

@@ -4,14 +4,16 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.service.app.db.DatabaseHelper;
-import android.service.app.db.GenericData;
 import android.service.app.db.GenericDatabase;
+import android.service.app.db.data.GenericAccount;
+import android.service.app.db.data.GenericData;
+import android.service.app.db.data.GenericDataApi;
+import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
-import android.service.app.db.inventory.GenericDevice;
-import android.service.app.db.sync.GenericSync;
-import android.service.app.db.user.GenericAccount;
+import android.service.app.db.data.GenericSync;
+import android.service.app.db.data.impl.Data;
+import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
 import android.service.app.json.RestBridge;
 import android.support.annotation.NonNull;
 
@@ -20,13 +22,13 @@ import java.util.Set;
 @TargetApi(Build.VERSION_CODES.CUPCAKE)
 public abstract class GenericDataTask<Input> extends AsyncTask<Input, Void, SyncOutput> implements GenericDatabase
 {
-    protected final DatabaseHelper localDatabase;
+    protected final SqlLiteDatabaseHelper sqlLiteDatabaseHelper;
     private final CallbackHandler<SyncOutput> handler;
     protected final RestBridge restBridge;
 
-    public GenericDataTask(DatabaseHelper localDatabase, Context context, CallbackHandler<SyncOutput> handler)
+    public GenericDataTask(SqlLiteDatabaseHelper localDatabase, Context context, CallbackHandler<SyncOutput> handler)
     {
-        this.localDatabase = localDatabase;
+        this.sqlLiteDatabaseHelper = localDatabase;
         this.handler = handler;
         this.restBridge = new RestBridge(context);
     }
@@ -49,7 +51,7 @@ public abstract class GenericDataTask<Input> extends AsyncTask<Input, Void, Sync
     public String toString()
     {
         return "GenericDataTask{" +
-                "localDatabase=" + localDatabase +
+                "localDatabase=" + sqlLiteDatabaseHelper +
                 ", handler=" + handler +
                 ", restBridge=" + restBridge +
                 '}';
@@ -58,49 +60,49 @@ public abstract class GenericDataTask<Input> extends AsyncTask<Input, Void, Sync
     @Override
     public <T extends GenericData> int insert(T data)
     {
-        return localDatabase.insert(data);
+        return sqlLiteDatabaseHelper.insert(data);
     }
 
     @Override
     public <T extends GenericData> int insert(Set<T> data)
     {
-        return localDatabase.insert(data);
+        return sqlLiteDatabaseHelper.insert(data);
     }
 
     @Override
-    public GenericDevice devices()
+    public GenericDataApi<GenericDevice> devices()
     {
-        return localDatabase.devices();
+        return sqlLiteDatabaseHelper.devices();
     }
 
     @Override
-    public GenericAccount account()
+    public GenericDataApi<GenericAccount> accounts()
     {
-        return localDatabase.account();
+        return sqlLiteDatabaseHelper.accounts();
     }
 
     @Override
-    public GenericMessage messages()
+    public GenericDataApi<GenericMessage> messages()
     {
-        return localDatabase.messages();
+        return sqlLiteDatabaseHelper.messages();
     }
 
     @Override
-    public GenericSync sync_points()
+    public GenericDataApi<GenericGps> coordinates()
     {
-        return localDatabase.sync_points();
+        return sqlLiteDatabaseHelper.coordinates();
     }
 
     @Override
-    public GenericGps coordinates()
+    public GenericDataApi<GenericSync> points()
     {
-        return localDatabase.coordinates();
+        return sqlLiteDatabaseHelper.points();
     }
 
     @Override
     public void updateOrInsertSyncIfNeeded(GenericSync newSync)
     {
-        localDatabase.updateOrInsertSyncIfNeeded(newSync);
+        sqlLiteDatabaseHelper.updateOrInsertSyncIfNeeded(newSync);
     }
 }
 

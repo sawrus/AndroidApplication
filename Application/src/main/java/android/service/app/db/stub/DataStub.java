@@ -1,23 +1,22 @@
 package android.service.app.db.stub;
 
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.service.app.db.Data;
-import android.service.app.db.GenericData;
+import android.service.app.db.data.impl.Data;
+import android.service.app.db.data.GenericData;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
 import android.service.app.db.data.impl.Gps;
 import android.service.app.db.data.impl.Message;
-import android.service.app.db.inventory.impl.Device;
-import android.service.app.db.inventory.GenericDevice;
-import android.service.app.db.sync.GenericSync;
-import android.service.app.db.sync.impl.Sync;
-import android.service.app.db.user.Account;
-import android.service.app.db.user.GenericAccount;
+import android.service.app.db.data.impl.Device;
+import android.service.app.db.data.GenericDevice;
+import android.service.app.db.data.GenericSync;
+import android.service.app.db.data.impl.Sync;
+import android.service.app.db.data.impl.Account;
+import android.service.app.db.data.GenericAccount;
 
 import java.util.Set;
 
-public abstract class DataStub<T extends GenericData> extends Data<T> implements GenericData<T>
+public abstract class DataStub<T extends GenericData> extends Data<T> implements GenericData
 {
     public static final class EmptyData extends Data<GenericData>
     {
@@ -34,19 +33,19 @@ public abstract class DataStub<T extends GenericData> extends Data<T> implements
         }
 
         @Override
-        protected GenericData emptyData()
+        public GenericData emptyData()
         {
             throw new UnsupportedOperationException("stub mode, class = " + getClass().getSimpleName());
         }
 
         @Override
-        protected GenericData getDataFromCursor(Cursor cursor)
+        public GenericData getDataFromCursor(Cursor cursor)
         {
             throw new UnsupportedOperationException("stub mode, class = " + getClass().getSimpleName());
         }
 
         @Override
-        protected Set<String> getFields()
+        public Set<String> getFields()
         {
             throw new UnsupportedOperationException("stub mode, class = " + getClass().getSimpleName());
         }
@@ -535,7 +534,7 @@ public abstract class DataStub<T extends GenericData> extends Data<T> implements
     }
 
     @Override
-    protected T getDataFromCursor(Cursor cursor)
+    public T getDataFromCursor(Cursor cursor)
     {
         throw new UnsupportedOperationException("stub mode, class = " + getClass().getSimpleName());
     }
@@ -547,7 +546,7 @@ public abstract class DataStub<T extends GenericData> extends Data<T> implements
     }
 
     @Override
-    protected Set<String> getFields()
+    public Set<String> getFields()
     {
         throw new UnsupportedOperationException("stub mode, class = " + getClass().getSimpleName());
     }
@@ -613,7 +612,7 @@ public abstract class DataStub<T extends GenericData> extends Data<T> implements
     }
 
     @Override
-    protected T emptyData()
+    public T emptyData()
     {
         throw new UnsupportedOperationException("stub mode, class = " + getClass().getSimpleName());
     }

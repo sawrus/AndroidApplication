@@ -1,12 +1,12 @@
-package android.service.app.db.inventory.impl;
+package android.service.app.db.data.impl;
 
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.service.app.db.Data;
-import android.service.app.db.DatabaseHelper;
 import android.service.app.db.GenericDatabase;
-import android.service.app.db.inventory.GenericDevice;
-import android.service.app.db.user.GenericAccount;
+import android.service.app.db.data.GenericAccount;
+import android.service.app.db.data.GenericDataApi;
+import android.service.app.db.data.GenericDevice;
+import android.service.app.db.sqllite.SqlLiteApi;
+import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
 import android.support.annotation.NonNull;
 
 import java.util.Collections;
@@ -19,7 +19,7 @@ public class Device extends Data<GenericDevice> implements GenericDevice
     private String name = "";
     private int account_id = GenericDatabase.EMPTY_DATA;
 
-    private static final String table_name = "device";
+    public static final String table_name = "device";
     public static final String NAME = "name";
     public static final String ACCOUNT_ID = "account_id";
 
@@ -29,7 +29,7 @@ public class Device extends Data<GenericDevice> implements GenericDevice
     });
 
     @Override
-    protected Set<String> getFields()
+    public Set<String> getFields()
     {
         return fields.keySet();
     }
@@ -64,7 +64,7 @@ public class Device extends Data<GenericDevice> implements GenericDevice
     }
 
     @NonNull
-    protected GenericDevice getDataFromCursor(Cursor cursor)
+    public GenericDevice getDataFromCursor(Cursor cursor)
     {
         GenericDevice data = new Device();
         data.setName(cursor.getString(cursor.getColumnIndex(NAME)));
@@ -74,7 +74,7 @@ public class Device extends Data<GenericDevice> implements GenericDevice
     }
 
     @Override
-    protected GenericDevice emptyData()
+    public GenericDevice emptyData()
     {
         return new Device();
     }
@@ -82,11 +82,6 @@ public class Device extends Data<GenericDevice> implements GenericDevice
     public Device()
     {
         super();
-    }
-
-    public Device(SQLiteDatabase readableDatabase)
-    {
-        super(readableDatabase);
     }
 
     public Device(String name, int account_id)
@@ -119,11 +114,12 @@ public class Device extends Data<GenericDevice> implements GenericDevice
         return account_id;
     }
 
+    //todo: Need to refactor
     @Override
     public GenericAccount getAccount()
     {
-        GenericAccount account = DatabaseHelper.ACCOUNT;
-        account.setReadableDatabase(getReadableDatabase());
+        GenericDataApi<GenericAccount> account = SqlLiteDatabaseHelper.ACCOUNT;
+        ((SqlLiteApi<GenericAccount>)account).setReadableDatabase(getReadableDatabase());
         return account.getFirst();
     }
 

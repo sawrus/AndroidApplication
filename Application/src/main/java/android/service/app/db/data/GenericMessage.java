@@ -1,9 +1,6 @@
 package android.service.app.db.data;
 
-import android.service.app.db.DeviceDependable;
-import android.service.app.db.GenericData;
-
-public interface GenericMessage extends GenericData<GenericMessage>, DeviceDependable
+public interface GenericMessage extends GenericData, DeviceDependable
 {
     void setPhone(String phone);
     void setIncoming(boolean incoming);

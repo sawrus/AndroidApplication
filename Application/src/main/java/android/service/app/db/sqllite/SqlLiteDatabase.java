@@ -1,12 +1,13 @@
-package android.service.app.db;
+package android.service.app.db.sqllite;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.service.app.db.data.impl.Data;
 import android.service.app.db.data.impl.Gps;
 import android.service.app.db.data.impl.Message;
-import android.service.app.db.inventory.impl.Device;
-import android.service.app.db.sync.impl.Sync;
-import android.service.app.db.user.Account;
+import android.service.app.db.data.impl.Device;
+import android.service.app.db.data.impl.Sync;
+import android.service.app.db.data.impl.Account;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
@@ -14,7 +15,7 @@ import android.support.annotation.NonNull;
 import java.util.HashSet;
 import java.util.Set;
 
-public enum Database
+public enum SqlLiteDatabase
 {
     ANDROID_V_1_1("android", 1, new HashSet<Data>(){
         {add(new Account());}
@@ -62,7 +63,7 @@ public enum Database
     })
     ;
 
-    //    Database.DatabaseWork databaseWork = new Database.DatabaseWork(context){
+    //    SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
     //        @Override
     //        public Object execute()
     //        {
@@ -72,7 +73,7 @@ public enum Database
     //
     //    databaseWork.run();
 
-    public static class DatabaseWork extends DatabaseHelper
+    public static class DatabaseWork extends SqlLiteDatabaseHelper
     {
         public DatabaseWork(final Context context)
         {
@@ -116,7 +117,7 @@ public enum Database
 
     public static void clear(Context context)
     {
-        for (Database database: Database.values())
+        for (SqlLiteDatabase database: SqlLiteDatabase.values())
         {
             if (Log.isWarnEnabled()) Log.warn("try to delete database: " + database);
             context.deleteDatabase(database.databaseName);
@@ -124,25 +125,25 @@ public enum Database
     }
 
     @NonNull
-    private static Database getActualDatabaseVersion()
+    private static SqlLiteDatabase getActualDatabaseVersion()
     {
-        return Database.ANDROID_V_1_6;
+        return SqlLiteDatabase.ANDROID_V_1_6;
     }
 
     public final String databaseName;
     public final Integer databaseVersion;
     public final Set<Data> tableSet;
 
-    Database(String databaseName, Integer databaseVersion, Set<Data> tableSet)
+    SqlLiteDatabase(String databaseName, Integer databaseVersion, Set<Data> tableSet)
     {
         this.databaseName = databaseName;
         this.databaseVersion = databaseVersion;
         this.tableSet = tableSet;
     }
 
-    public static Database getDatabaseByNameVersion(String name, Integer version)
+    public static SqlLiteDatabase getDatabaseByNameVersion(String name, Integer version)
     {
-        for (Database database: values())
+        for (SqlLiteDatabase database: values())
         {
             if (database.databaseName.equals(name) && database.databaseVersion.equals(version))
                 return database;
@@ -154,7 +155,7 @@ public enum Database
     @Override
     public String toString()
     {
-        return "Database{" +
+        return "SqlLiteDatabase{" +
                 "databaseName='" + databaseName + '\'' +
                 ", databaseVersion=" + databaseVersion +
                 '}';

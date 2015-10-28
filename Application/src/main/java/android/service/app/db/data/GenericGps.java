@@ -1,9 +1,6 @@
 package android.service.app.db.data;
 
-import android.service.app.db.DeviceDependable;
-import android.service.app.db.GenericData;
-
-public interface GenericGps extends GenericData<GenericGps>, DeviceDependable
+public interface GenericGps extends GenericData, DeviceDependable
 {
     int getDeviceId();
     double getLatitude();

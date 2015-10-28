@@ -1,11 +1,9 @@
 package android.service.app.db.data.impl;
 
 import android.database.Cursor;
-import android.service.app.db.Data;
-import android.service.app.db.DeviceDependable;
+import android.service.app.db.data.DeviceDependable;
 import android.service.app.db.data.GenericMessage;
-import android.service.app.db.inventory.impl.Device;
-import android.service.app.db.inventory.GenericDevice;
+import android.service.app.db.data.GenericDevice;
 import android.support.annotation.NonNull;
 
 import java.util.Collections;
@@ -21,7 +19,7 @@ public class Message extends Data<GenericMessage> implements DeviceDependable, G
     private int device_id = -2;
     private GenericDevice device = new Device();
 
-    private static final String table_name = "message";
+    public static final String table_name = "message";
     public static final String ADDRESS = "tofrom";
     public static final String DATA = "data";
     public static final String INCOMING = "incoming";
@@ -46,7 +44,7 @@ public class Message extends Data<GenericMessage> implements DeviceDependable, G
     });
 
     @Override
-    protected Set<String> getFields()
+    public Set<String> getFields()
     {
         return fields.keySet();
     }
@@ -88,7 +86,7 @@ public class Message extends Data<GenericMessage> implements DeviceDependable, G
     }
 
     @NonNull
-    protected GenericMessage getDataFromCursor(Cursor cursor)
+    public GenericMessage getDataFromCursor(Cursor cursor)
     {
         GenericMessage data = new Message();
         data.setPhone(cursor.getString(cursor.getColumnIndex(ADDRESS)));
@@ -100,7 +98,7 @@ public class Message extends Data<GenericMessage> implements DeviceDependable, G
     }
 
     @Override
-    protected GenericMessage emptyData()
+    public GenericMessage emptyData()
     {
         return new Message();
     }
@@ -179,7 +177,6 @@ public class Message extends Data<GenericMessage> implements DeviceDependable, G
                 ", incoming=" + incoming +
                 ", text='" + data + '\'' +
                 ", device_id=" + device_id +
-                ", device=" + device +
                 '}' + " - " + super.toString();
     }
 

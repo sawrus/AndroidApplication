@@ -16,9 +16,9 @@ import android.os.RemoteException;
 import android.provider.Settings;
 import android.service.app.AndroidApplication;
 import android.service.app.RemoteService;
-import android.service.app.db.Database;
+import android.service.app.db.sqllite.SqlLiteDatabase;
 import android.service.app.db.data.impl.Gps;
-import android.service.app.db.inventory.impl.Device;
+import android.service.app.db.data.impl.Device;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
 import android.support.annotation.Nullable;
@@ -119,7 +119,7 @@ public class GpsService extends Service implements LocationListener
 
     private void saveGpsSetToDatabase()
     {
-        Database.DatabaseWork databaseWork = new Database.DatabaseWork(context){
+        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
             @Override
             public Object execute()
             {
@@ -159,7 +159,7 @@ public class GpsService extends Service implements LocationListener
 
     private void fillDevice()
     {
-        Database.DatabaseWork databaseWork = new Database.DatabaseWork(context){
+        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
             @Override
             public Object execute()
             {

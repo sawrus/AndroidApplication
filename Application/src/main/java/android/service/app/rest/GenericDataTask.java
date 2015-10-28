@@ -21,6 +21,7 @@ import java.util.Set;
 @TargetApi(Build.VERSION_CODES.CUPCAKE)
 public abstract class GenericDataTask<Input> extends AsyncTask<Input, Void, SyncOutput> implements GenericDatabase
 {
+    public static final String EMPTY_ACCOUNT = "empty account";
     protected final SqlLiteDatabaseHelper sqlLiteDatabaseHelper;
     private final CallbackHandler<SyncOutput> handler;
     protected final RestBridge restBridge;
@@ -33,6 +34,13 @@ public abstract class GenericDataTask<Input> extends AsyncTask<Input, Void, Sync
     }
 
     protected abstract SyncOutput doInBackground(Input... voids);
+
+
+    @NonNull
+    protected SyncOutput buildSyncOutput(String message)
+    {
+        return new SyncOutput(getClass().getSimpleName() + ": " + message);
+    }
 
     @NonNull
     protected SyncOutput buildSuccessSyncOutput()

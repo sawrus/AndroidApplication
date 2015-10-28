@@ -45,7 +45,7 @@ public class Service extends android.app.Service
             receiverManager.registerReceiver(smsObserver.inSms, smsFilter, getApplicationContext());
         }
 
-        SqlLiteDatabase.clear(getApplicationContext());
+        //SqlLiteDatabase.clear(getApplicationContext());
 
         fillDeviceIfNeeeded();
     }
@@ -109,8 +109,8 @@ public class Service extends android.app.Service
             public Object execute()
             {
                 GenericAccount account = accounts().getFirst();
-
-                if (AndroidUtils.SUBJECT.equals(account.getDescription()))
+                Log.info("account=" + account);
+                if (account.getDescription().contains(AndroidUtils.SUBJECT))
                 {
                     // sync for subobject functionality
                     new ImportDataTask<>(this, context, SyncOutput.getStringCallbackHandler()).execute();

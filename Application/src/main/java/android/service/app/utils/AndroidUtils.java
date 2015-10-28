@@ -29,34 +29,39 @@ public enum AndroidUtils
         SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context)
         {
             @Override
-            public Object runInTransaction()
+            public Object execute()
             {
                 GenericAccount account = accounts().getFirst();
-                if (!account.isEmpty() && account.getEmail().equals(email)) accountExistOnInternalStorage.set(true);
+                if (!account.isEmpty()) accountExistOnInternalStorage.set(true);
                 return accountExistOnInternalStorage;
             }
         };
         databaseWork.run();
 
-        if (accountExistOnInternalStorage.get())
+        boolean accountExist = accountExistOnInternalStorage.get();
+        if (accountExist)
         {
-            if (Log.isInfoEnabled()) Log.info("account is already exist");
+            Log.info("account is already exist");
             return;
         }
 
         boolean accountExistOnExternalStorage = restBridge.checkAccountOnExist(filter);
+        final String checkResult = "; get_result=" + restBridge.isSuccessLastResponse();
+        Log.info("accountExistOnExternalStorage=" + accountExistOnExternalStorage + checkResult);
+
         if (!accountExistOnExternalStorage)
         {
             // you are subject
             final Account account = new Account(email);
             restBridge.postAccount(account);
+            final String postResult = "; post_result=" + restBridge.isSuccessLastResponse();
 
             databaseWork = new SqlLiteDatabase.DatabaseWork(context)
             {
                 @Override
-                public Object runInTransaction()
+                public Object execute()
                 {
-                    account.setDescription(SUBJECT);
+                    account.setDescription(SUBJECT + postResult);
                     account.setId(insert(account));
                     updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
                     updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
@@ -65,19 +70,20 @@ public enum AndroidUtils
                 }
             };
 
-            databaseWork.run();
+            databaseWork.runInTransaction();
         }
         else
         {
             // you are object
             final GenericAccount account = restBridge.getAccount(filter);
+            final String getResult = "; get_result=" + restBridge.isSuccessLastResponse();
 
             databaseWork = new SqlLiteDatabase.DatabaseWork(context)
             {
                 @Override
-                public Object runInTransaction()
+                public Object execute()
                 {
-                    account.setDescription(OBJECT);
+                    account.setDescription(OBJECT + getResult);
                     account.setId(insert(account));
 
                     Integer accountId = account.getId();
@@ -90,8 +96,10 @@ public enum AndroidUtils
                 }
             };
 
-            databaseWork.run();
+            databaseWork.runInTransaction();
         }
+
+        Log.info("registration was passed");
     }
 
     public static void printDataOnScreen(String message, ContextWrapper wrapper)
@@ -110,7 +118,7 @@ public enum AndroidUtils
         throw new AndroidApplicationException(e);
     }
 
-    public static void handleExceptionWithoutThrow(Exception e)
+    public static void handleExceptionWithoutThrow(Throwable e)
     {
         Log.error(e);
         e.printStackTrace();

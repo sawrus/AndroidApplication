@@ -33,6 +33,18 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         this.context = context;
     }
 
+    private boolean isSuccessLastResponse = true;
+
+    public boolean isSuccessLastResponse()
+    {
+        return isSuccessLastResponse;
+    }
+
+    private void setIsSuccessLastResponse(boolean isSuccessLastResponse)
+    {
+        this.isSuccessLastResponse = isSuccessLastResponse;
+    }
+
     @Override
     public Set<GenericMessage> getMessages(DataFilter s)
     {
@@ -48,6 +60,8 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         };
         databaseWork.runInTransaction();
         //used only for testing
+
+        setIsSuccessLastResponse(true);        
         return messages;
     }
 
@@ -66,18 +80,22 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         };
         databaseWork.runInTransaction();
         //used only for testing
+
+        setIsSuccessLastResponse(true);
         return coordinates;
     }
 
     @Override
     public GenericAccount getAccount(DataFilter emailFilter)
     {
+        setIsSuccessLastResponse(true);
         return new Account(emailFilter.getFilter());
     }
 
     @Override
     public boolean checkAccountOnExist(DataFilter email)
     {
+        setIsSuccessLastResponse(true);
         //used only for testing
         return false;
     }
@@ -97,13 +115,15 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         };
         databaseWork.runInTransaction();
         //used only for testing
+
+        setIsSuccessLastResponse(true);
         return devices;
     }
 
     @Override
     public RestHttpResponseHandler postMessages(Set<GenericMessage> messages)
     {
-        RestHttpResponseHandler responseHandler = null;
+        RestHttpResponseHandler responseHandler = new RestHttpResponseHandler();
         Set<JSONObject> jsonObjects = new LinkedHashSet<>();
         for (GenericMessage message: messages)
         {
@@ -117,6 +137,8 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
 
         if (Log.isInfoEnabled()) Log.info("Message.jsonObjects=" + jsonObjects);
         HttpClient.postJson(context, Message.table_name, jsonObjects, responseHandler);
+
+        setIsSuccessLastResponse(responseHandler.isSuccessResponse());
         return responseHandler;
     }
 
@@ -128,7 +150,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public RestHttpResponseHandler postGps(Set<GenericGps> gpsSets)
     {
-        RestHttpResponseHandler responseHandler = null;
+        RestHttpResponseHandler responseHandler = new RestHttpResponseHandler();
         Set<JSONObject> jsonObjects = new LinkedHashSet<>();
         for (GenericGps gps: gpsSets)
         {
@@ -142,6 +164,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
 
         if (Log.isInfoEnabled()) Log.info("Gps.jsonObjects=" + jsonObjects);
         HttpClient.postJson(context, Gps.table_name, jsonObjects, responseHandler);
+        setIsSuccessLastResponse(responseHandler.isSuccessResponse());
         return responseHandler;
     }
 
@@ -154,6 +177,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
 
         RestHttpResponseHandler responseHandler = new RestHttpResponseHandler();
         HttpClient.postJson(context, Account.table_name, jsonObject, responseHandler);
+        setIsSuccessLastResponse(responseHandler.isSuccessResponse());
         return responseHandler;
     }
 
@@ -166,6 +190,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         if (Log.isInfoEnabled()) Log.info("Device.jsonObject=" + jsonObject);
         RestHttpResponseHandler responseHandler = new RestHttpResponseHandler();
         HttpClient.postJson(context, Device.table_name, jsonObject, responseHandler);
+        setIsSuccessLastResponse(responseHandler.isSuccessResponse());
         return responseHandler;
     }
 }

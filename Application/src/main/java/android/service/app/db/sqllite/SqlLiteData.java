@@ -177,6 +177,7 @@ public abstract class SqlLiteData<T extends GenericData> implements SqlLiteApi<T
 
     public int insert()
     {
+        Log.info("insert: data=" + getData());
         return insert(getWritableDatabase(), getTableName(), getContentValues());
     }
 
@@ -200,10 +201,7 @@ public abstract class SqlLiteData<T extends GenericData> implements SqlLiteApi<T
         return result;
     }
 
-    public Map<String, Object> getData()
-    {
-        return Collections.emptyMap();
-    }
+    public abstract Map<String, Object> getData();
 
     @NonNull
     private ContentValues getContentValues()
@@ -358,7 +356,7 @@ public abstract class SqlLiteData<T extends GenericData> implements SqlLiteApi<T
         if (maxId > 0)
             return new Sync(account.getId(), maxId, tableName);
         else
-            return new Sync();
+            return new Sync(account.getId(), 0, tableName);
     }
 
     @Override

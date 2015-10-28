@@ -13,6 +13,7 @@ import java.util.Set;
 
 public class ExportDataTask<Input> extends GenericDataTask<Input>
 {
+
     public ExportDataTask(SqlLiteDatabaseHelper localDatabase, Context context, CallbackHandler<SyncOutput> handler)
     {
         super(localDatabase, context, handler);
@@ -24,12 +25,7 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
         try
         {
             GenericAccount account = accounts().getFirst();
-            if (account.isEmpty())
-            {
-                String message = "empty account";
-                if (Log.isInfoEnabled()) Log.info(message);
-                return new SyncOutput(message);
-            }
+            if (account.isEmpty()) return buildSyncOutput(EMPTY_ACCOUNT);
 
             GenericDevice device = devices().getFirst();
 

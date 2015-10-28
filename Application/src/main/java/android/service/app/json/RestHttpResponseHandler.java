@@ -1,5 +1,6 @@
 package android.service.app.json;
 
+import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
 
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -13,6 +14,18 @@ import cz.msebera.android.httpclient.Header;
 
 public class RestHttpResponseHandler extends JsonHttpResponseHandler
 {
+    private volatile boolean isSuccessResponse = true;
+
+    protected boolean isSuccessResponse()
+    {
+        return isSuccessResponse;
+    }
+
+    private void setIsSuccessResponse(boolean isSuccessResponse)
+    {
+        this.isSuccessResponse = isSuccessResponse;
+    }
+
     @Override
     public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse)
     {
@@ -20,7 +33,8 @@ public class RestHttpResponseHandler extends JsonHttpResponseHandler
         Log.error("headers=" + Arrays.toString(headers));
         Log.error("throwable=" + throwable.getMessage());
         Log.error("errorResponse=" + errorResponse);
-        throw new RuntimeException(throwable);
+        AndroidUtils.handleExceptionWithoutThrow(throwable);
+        setIsSuccessResponse(false);
     }
 
     @Override
@@ -30,7 +44,8 @@ public class RestHttpResponseHandler extends JsonHttpResponseHandler
         Log.error("headers=" + Arrays.toString(headers));
         Log.error("throwable=" + throwable.getMessage());
         Log.error("errorResponse=" + errorResponse);
-        throw new RuntimeException(throwable);
+        AndroidUtils.handleExceptionWithoutThrow(throwable);
+        setIsSuccessResponse(false);
     }
 
     @Override
@@ -40,6 +55,7 @@ public class RestHttpResponseHandler extends JsonHttpResponseHandler
         Log.error("headers=" + Arrays.toString(headers));
         Log.error("throwable=" + throwable.getMessage());
         Log.error("responseString=" + responseString);
-        throw new RuntimeException(throwable);
+        AndroidUtils.handleExceptionWithoutThrow(throwable);
+        setIsSuccessResponse(false);
     }
 }

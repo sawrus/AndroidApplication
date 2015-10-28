@@ -44,8 +44,9 @@ public class SqlLiteDatabaseHelper extends SQLiteOpenHelper implements GenericDa
     public <T extends GenericData> int insert(T data)
     {
         if (data instanceof SqlLiteApi)
-            return wrapForWrite((GenericDataApi<T>)data).insert();
-
+        {
+            return wrapForWrite((GenericDataApi<T>) data).insert();
+        }
         return checkTypeAndThrowException(data);
     }
 

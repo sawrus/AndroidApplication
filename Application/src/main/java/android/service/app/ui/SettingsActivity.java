@@ -207,7 +207,7 @@ public class SettingsActivity extends PreferenceActivity implements
 
             if (EMAIL_FIELD_NAME.equals(preference.getKey()))
             {
-                //AndroidUtils.registerOrReuseAccount(preference.getContext(), String.valueOf(value));
+                AndroidUtils.registerOrReuseAccount(preference.getContext(), String.valueOf(value));
             }
 
             return true;

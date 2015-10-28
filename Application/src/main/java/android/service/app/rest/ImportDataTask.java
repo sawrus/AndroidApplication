@@ -1,7 +1,6 @@
 package android.service.app.rest;
 
 import android.content.Context;
-import android.service.app.db.data.GenericAccount;
 import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
@@ -24,6 +23,8 @@ public class ImportDataTask<Input> extends GenericDataTask<Input>
     {
         try
         {
+            if (accounts().getFirst().isEmpty()) return buildSyncOutput(EMPTY_ACCOUNT);
+
             Set<GenericMessage> messages = restBridge.getMessages(DataFilter.BY_ID);
             if (Log.isInfoEnabled()) Log.info("messages=" + messages);
 
@@ -33,13 +34,9 @@ public class ImportDataTask<Input> extends GenericDataTask<Input>
             Set<GenericDevice> devices = restBridge.getDevices(DataFilter.ALL);
             if (Log.isInfoEnabled()) Log.info("devices=" + devices);
 
-            GenericAccount account = restBridge.getAccount(DataFilter.ALL);
-            if (Log.isInfoEnabled()) Log.info("account=" + account);
-
 //            insert(messages);
 //            insert(coordinates);
 //            insert(devices);
-//            insert(account);
         }
         catch (Exception e)
         {

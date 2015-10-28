@@ -30,7 +30,7 @@ MongoClient.connect( "mongodb://"+ MONGO_HOST +":"+ MONGO_PORT +"/"+ MONGO_DB,
     }
 );
 
-exports.get = function(fn) {
+var get = function(fn) {
   if(db) {
     fn(db);
   } else {
@@ -42,3 +42,45 @@ exports.get = function(fn) {
     });
   }
 };
+
+var getWatcherData = function(requestParams, tableName) {
+    // TODO validations
+    if (requestParams.device) {
+        var device = requestParams.device;
+    }
+    if (requestParams.syncid) {
+        var syncid = requestParams.syncid;
+    }
+    if (requestParams.date) {
+        var date = requestParams.date;
+    }
+    if (requestParams.direction) {
+        var direction = requestParams.direction;
+    }
+    if (requestParams.n) {
+        var n = requestParams.n;
+    }
+}
+
+var storeData = function (obj, collection, onSuccess, onError) {
+    get(function(db) {
+        // store to DB
+        db.collection(collection).insert(obj, {'ordered' : false}, function callback(err, doc) {
+            if (err) {
+                if (onError) {
+                    onError(err);
+                } else {
+                    console.log("Error while adding to " + collection + ": " + err);
+                }
+            } else {
+                onSuccess();
+            }
+        });
+    });
+}
+
+module.exports = {
+    get : get,
+    getWatcherData : getWatcherData,
+    storeData : storeData
+}

@@ -16,9 +16,10 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
+import android.service.app.utils.AndroidUtils;
+import android.service.app.utils.Log;
 import android.text.TextUtils;
 import android.service.app.R;
-
 import java.util.List;
 
 
@@ -43,11 +44,11 @@ public class SettingsActivity extends PreferenceActivity implements
      * shown on tablets.
      */
     private static final boolean ALWAYS_SIMPLE_PREFS = false;
+    public static final String EMAIL_FIELD_NAME = "email";
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
     {
-
     }
 
     @Override
@@ -91,8 +92,7 @@ public class SettingsActivity extends PreferenceActivity implements
         // Bind the summaries of EditText/List/Dialog/Ringtone preferences to
         // their values. When their values change, their summaries are updated
         // to reflect the new value, per the Android Design guidelines.
-        bindPreferenceSummaryToValue(findPreference("example_text"));
-        bindPreferenceSummaryToValue(findPreference("example_list"));
+        bindPreferenceSummaryToValue(findPreference(EMAIL_FIELD_NAME));
         bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
         bindPreferenceSummaryToValue(findPreference("sync_frequency"));
     }
@@ -204,6 +204,12 @@ public class SettingsActivity extends PreferenceActivity implements
                 // simple string representation.
                 preference.setSummary(stringValue);
             }
+
+            if (EMAIL_FIELD_NAME.equals(preference.getKey()))
+            {
+                //AndroidUtils.registerOrReuseAccount(preference.getContext(), String.valueOf(value));
+            }
+
             return true;
         }
     };
@@ -247,8 +253,7 @@ public class SettingsActivity extends PreferenceActivity implements
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("example_text"));
-            bindPreferenceSummaryToValue(findPreference("example_list"));
+            bindPreferenceSummaryToValue(findPreference(EMAIL_FIELD_NAME));
         }
     }
 

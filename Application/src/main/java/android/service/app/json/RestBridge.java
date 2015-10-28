@@ -3,6 +3,7 @@ package android.service.app.json;
 import android.content.Context;
 import android.service.app.db.data.impl.Data;
 import android.service.app.db.DataBridge;
+import android.service.app.db.sqllite.SqlLiteDatabase;
 import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
 import android.service.app.db.data.GenericData;
 import android.service.app.db.data.GenericGps;
@@ -35,25 +36,68 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public Set<GenericMessage> getMessages(DataFilter s)
     {
-        return Collections.emptySet();
+        final Set<GenericMessage> messages = new LinkedHashSet<>();
+        //used only for testing
+        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
+            @Override
+            public Object execute()
+            {
+                messages.addAll(messages().getActualBySync());
+                return null;
+            }
+        };
+        databaseWork.runInTransaction();
+        //used only for testing
+        return messages;
     }
 
     @Override
     public Set<GenericGps> getCoordinates(DataFilter s)
     {
-        return Collections.emptySet();
+        final Set<GenericGps> coordinates = new LinkedHashSet<>();
+        //used only for testing
+        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
+            @Override
+            public Object execute()
+            {
+                coordinates.addAll(coordinates().getActualBySync());
+                return null;
+            }
+        };
+        databaseWork.runInTransaction();
+        //used only for testing
+        return coordinates;
     }
 
     @Override
-    public GenericAccount getAccount(DataFilter s)
+    public GenericAccount getAccount(DataFilter emailFilter)
     {
-        return new Account();
+        return new Account(emailFilter.getFilter());
+    }
+
+    @Override
+    public boolean checkAccountOnExist(DataFilter email)
+    {
+        //used only for testing
+        return false;
     }
 
     @Override
     public Set<GenericDevice> getDevices(DataFilter s)
     {
-        return Collections.emptySet();
+        final Set<GenericDevice> devices = new LinkedHashSet<>();
+        //used only for testing
+        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
+            @Override
+            public Object execute()
+            {
+                devices.addAll(devices().getActualBySync());
+                return null;
+            }
+        };
+        databaseWork.runInTransaction();
+        //used only for testing
+        return devices;
     }
 
     @Override

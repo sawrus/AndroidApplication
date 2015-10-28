@@ -24,6 +24,13 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
         try
         {
             GenericAccount account = accounts().getFirst();
+            if (account.isEmpty())
+            {
+                String message = "empty account";
+                if (Log.isInfoEnabled()) Log.info(message);
+                return new SyncOutput(message);
+            }
+
             GenericDevice device = devices().getFirst();
 
             Set<GenericMessage> actualMessagesBySync = messages().getActualBySync();

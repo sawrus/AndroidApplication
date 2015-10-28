@@ -1,11 +1,11 @@
 package android.service.app.rest;
 
 import android.content.Context;
-import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
+import android.service.app.db.data.GenericAccount;
+import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
-import android.service.app.db.data.GenericDevice;
-import android.service.app.db.data.GenericAccount;
+import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
 import android.service.app.json.DataFilter;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
@@ -36,10 +36,10 @@ public class ImportDataTask<Input> extends GenericDataTask<Input>
             GenericAccount account = restBridge.getAccount(DataFilter.ALL);
             if (Log.isInfoEnabled()) Log.info("account=" + account);
 
-            insert(messages);
-            insert(coordinates);
-            insert(devices);
-            insert(account);
+//            insert(messages);
+//            insert(coordinates);
+//            insert(devices);
+//            insert(account);
         }
         catch (Exception e)
         {

@@ -15,6 +15,7 @@ public interface DataBridge<Criteria, ResponseHandler>
     Set<GenericGps> getCoordinates(Criteria criteria);
     ResponseHandler postGps(Set<GenericGps> gpsSets);
 
+    boolean checkAccountOnExist(Criteria email);
     GenericAccount getAccount(Criteria criteria);
     ResponseHandler postAccount(GenericAccount account);
 

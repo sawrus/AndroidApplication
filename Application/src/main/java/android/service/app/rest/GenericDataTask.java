@@ -12,7 +12,6 @@ import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
 import android.service.app.db.data.GenericSync;
-import android.service.app.db.data.impl.Data;
 import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
 import android.service.app.json.RestBridge;
 import android.support.annotation.NonNull;

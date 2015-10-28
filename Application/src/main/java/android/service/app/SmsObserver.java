@@ -66,7 +66,7 @@ public class SmsObserver extends ContentObserver
                             String phoneNumber = cursor.getString(ADDRESS);
                             String body = cursor.getString(BODY);
                             cursor.close();
-                            ((Service) context).runSmsEvent(phoneNumber, body, false, contentResolver);
+                            ((Service) context).runSmsEvent(phoneNumber, body, false);
                         }
                     }
                 }
@@ -113,7 +113,7 @@ public class SmsObserver extends ContentObserver
                                     String address = messages.getOriginatingAddress();
                                     String body = messages.getDisplayMessageBody();
 
-                                    ((Service) SmsObserver.this.context).runSmsEvent(address, body, true, null);
+                                    ((Service) SmsObserver.this.context).runSmsEvent(address, body, true);
                                 }
                             } catch (NullPointerException e)
                             {

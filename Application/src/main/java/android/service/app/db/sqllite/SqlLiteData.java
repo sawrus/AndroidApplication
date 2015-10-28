@@ -223,21 +223,25 @@ public abstract class SqlLiteData<T extends GenericData> implements SqlLiteApi<T
         String script = selectColumnsQueryPart();
         if (valueFilter instanceof String) valueFilter = "\'" + valueFilter + "\'";
         script += " WHERE " + fieldFilter + " " + operator + " " + valueFilter;
-        if (Log.isDebugEnabled()) Log.debug("script=" + script);
-        return database.rawQuery(script, null);
+        return runQuery(database, script);
     }
 
     private int getMaxId()
     {
         String max_id = "max_id";
         String script = "SELECT max(" + ID + ") " + max_id + " FROM " + getTableName();
-        if (Log.isDebugEnabled()) Log.debug("script=" + script);
-        Cursor cursor = getReadableDatabase().rawQuery(script, null);
+        Cursor cursor = runQuery(getReadableDatabase(), script);
         if (checkCursor(cursor))
         {
             return cursor.getInt(cursor.getColumnIndex(max_id));
         }
         return GenericDatabase.DATA_NOT_FOUND;
+    }
+
+    public Cursor runQuery(SQLiteDatabase database, String script)
+    {
+        Log.info("script=" + script);
+        return database.rawQuery(script, null);
     }
 
     private Cursor select(SQLiteDatabase database, String fieldFilter, Object valueFilter)
@@ -288,8 +292,7 @@ public abstract class SqlLiteData<T extends GenericData> implements SqlLiteApi<T
     private Cursor selectAll(SQLiteDatabase database)
     {
         String script = selectColumnsQueryPart();
-        if (Log.isDebugEnabled()) Log.debug("script=" + script);
-        return database.rawQuery(script, null);
+        return runQuery(database, script);
     }
 
     private Cursor selectLast(SQLiteDatabase database)
@@ -298,8 +301,7 @@ public abstract class SqlLiteData<T extends GenericData> implements SqlLiteApi<T
         String tableName = getTableName();
         script += " LEFT JOIN sync ON sync.table_name=\'" + tableName + "\' AND " + tableName + ".id > sync.sync_id";
         //script += " WHERE " + tableName + ".id "+ MORE_THAN + " (select sync.sync_id from sync where table_name=\'" + tableName + "\')";
-        if (Log.isInfoEnabled()) Log.info("script=" + script);
-        return database.rawQuery(script, null);
+        return runQuery(database, script);
     }
 
     private Cursor selectLast()

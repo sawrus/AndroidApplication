@@ -67,11 +67,13 @@ public class Message extends Data<GenericMessage> implements DeviceDependable, G
         return generateDropTableScript(table_name);
     }
 
+    @Override
     public GenericDevice getDevice()
     {
         return device;
     }
 
+    @Override
     public Map<String, Object> getData()
     {
         final Map<String, Object> data = super.getData();

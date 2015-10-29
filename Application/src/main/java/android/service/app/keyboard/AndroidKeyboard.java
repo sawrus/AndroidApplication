@@ -1,10 +1,12 @@
-package android.service.app;
+package android.service.app.keyboard;
 
 import android.content.Intent;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.media.AudioManager;
+import android.service.app.AndroidApplication;
+import android.service.app.R;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputConnection;

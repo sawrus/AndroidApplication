@@ -97,7 +97,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     {
         setIsSuccessLastResponse(true);
         //used only for testing
-        return false;
+        return true;
     }
 
     @Override

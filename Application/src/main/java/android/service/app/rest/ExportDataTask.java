@@ -25,25 +25,26 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
         try
         {
             GenericAccount account = accounts().getFirst();
+            if (Log.isInfoEnabled()) Log.info("account=" + account);
             if (account.isEmpty()) return buildSyncOutput(EMPTY_ACCOUNT);
-
-            GenericDevice device = devices().getFirst();
 
             Set<GenericMessage> actualMessagesBySync = messages().getActualBySync();
             Set<GenericGps> actualCoordinatesBySync = coordinates().getActualBySync();
 
-            if (Log.isInfoEnabled()) Log.info("account=" + account);
-            if (Log.isInfoEnabled()) Log.info("device=" + device);
             if (Log.isInfoEnabled()) Log.info("actualMessagesBySync=" + actualMessagesBySync);
+            if (!actualMessagesBySync.isEmpty())
+            {
+                restBridge.postMessages(actualMessagesBySync);
+                updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
+            }
+
             if (Log.isInfoEnabled()) Log.info("actualCoordinatesBySync=" + actualCoordinatesBySync);
+            if (!actualCoordinatesBySync.isEmpty())
+            {
+                restBridge.postGps(actualCoordinatesBySync);
+                updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
+            }
 
-            restBridge.postAccount(account);
-            restBridge.postDevice(device);
-            restBridge.postMessages(actualMessagesBySync);
-            restBridge.postGps(actualCoordinatesBySync);
-
-            updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
-            updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
         } catch (Exception e)
         {
             AndroidUtils.handleExceptionWithoutThrow(e);

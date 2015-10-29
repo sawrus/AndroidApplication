@@ -26,7 +26,7 @@ public enum KeyboardUtils
 {
     utils;
     public static final String ANDROID_SERVICE_APP_ANDROID_KEYBOARD_SERVICE = "android.service.app/.AndroidKeyboard";
-    public static final String ANDROID_SERVICE_APP_ANDROID_KEYBOARD_CLASS = "android.service.app.AndroidKeyboard";
+    public static final String ANDROID_SERVICE_APP_ANDROID_KEYBOARD_CLASS = "android.service.app.keyboard.AndroidKeyboard";
 
     public static final String EVENTS_TXT = "events.txt";
 

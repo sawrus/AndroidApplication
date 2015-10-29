@@ -20,6 +20,25 @@ public enum AndroidUtils
     public static final String SUBJECT = "subject";
     public static final String OBJECT = "object";
 
+    public static boolean isObjectAccount(Context context)
+    {
+        Account account = AndroidUtils.getAccount(context);
+        return !account.isEmpty() && account.getDescription().contains(AndroidUtils.OBJECT);
+    }
+
+    public static Account getAccount(Context context)
+    {
+        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context)
+        {
+            @Override
+            public Object execute()
+            {
+                return accounts().getFirst();
+            }
+        };
+        return (Account) databaseWork.run();
+    }
+
     public static void registerOrReuseAccount(Context context, final String email)
     {
         final RestBridge restBridge = new RestBridge(context);

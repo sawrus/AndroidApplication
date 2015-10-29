@@ -35,14 +35,16 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
             if (!actualMessagesBySync.isEmpty())
             {
                 restBridge.postMessages(actualMessagesBySync);
-                updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
+                if (restBridge.isSuccessLastResponse())
+                    updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
             }
 
             if (Log.isInfoEnabled()) Log.info("actualCoordinatesBySync=" + actualCoordinatesBySync);
             if (!actualCoordinatesBySync.isEmpty())
             {
                 restBridge.postGps(actualCoordinatesBySync);
-                updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
+                if (restBridge.isSuccessLastResponse())
+                    updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
             }
 
         } catch (Exception e)

@@ -30,34 +30,28 @@ function handleRequest(request, response){
             if (isPost(request)) {
                 processPostRequest(request, response, 'devices');
             } else {
-                // TODO
+                processGetDevicesByAccount(url.parse(request.url, true), response);
             }
             break;
         case '/messages' :
             if (isPost(request)) {
                 processPostRequest(request, response, 'messages');
             } else if (isGet(request)) {
-                console.log("get for messages");
-                mongo.getWatcherData(url.parse(request.url, true), 'messages',
-                    function(data) {
-                        response.writeHead(200, "OK", {'Content-Type': 'application/json; charset=UTF-8'});
-                        console.log("Requested data: " + data);
-                        response.end(JSON.stringify(data));
-                    });
+                processGetDataRequest(url.parse(request.url, true), 'messages', response);
             }
             break;
         case '/calls' :
             if (isPost(request)) {
                 processPostRequest(request, response, 'calls');
             } else if (isGet(request)) {
-                mongo.getWatcherData(url.parse(request.url, true), 'calls');
+                processGetDataRequest(url.parse(request.url, true), 'calls', response);
             }
             break;
         case '/gps' :
             if (isPost(request)) {
                 processPostRequest(request, response, 'gps');
             } else if (isGet(request)) {
-                mongo.getWatcherData(url.parse(request.url, true), 'gps');
+                processGetDataRequest(url.parse(request.url, true), 'gps', response);
             }
             break;
         default :
@@ -71,6 +65,25 @@ function isPost(request) {
 
 function isGet(request) {
     return request.method == 'GET';
+}
+
+function processGetDevicesByAccount(params, response) {
+    console.log(params.query);
+    mongo.getDevicesByAccount(params.query.account, function(data){
+        response.writeHead(200, "OK", {'Content-Type': 'application/json; charset=UTF-8'});
+        console.log("Requested data: " + data);
+        response.end(JSON.stringify(data));
+    });
+}
+
+function processGetDataRequest(params, collection, response) {
+    console.log(params.query);
+    mongo.getWatcherData(params.query, collection,
+        function(data) {
+            response.writeHead(200, "OK", {'Content-Type': 'application/json; charset=UTF-8'});
+            console.log("Requested data: " + data);
+            response.end(JSON.stringify(data));
+        });
 }
 
 function processPostRequest(request, response, collection) {

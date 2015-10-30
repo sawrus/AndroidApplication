@@ -1,6 +1,7 @@
 package android.service.app.db.data;
 
 import java.util.Map;
+import java.util.Set;
 
 public interface GenericData extends GenericDataInsertApi
 {
@@ -14,4 +15,6 @@ public interface GenericData extends GenericDataInsertApi
     void setId(Integer id);
     boolean isEmpty();
     Map<String, Object> getData();
+    void setData(Map<String, Object> data);
+    Set<String> getFields();
 }

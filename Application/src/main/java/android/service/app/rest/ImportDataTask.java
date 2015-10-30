@@ -1,6 +1,7 @@
 package android.service.app.rest;
 
 import android.content.Context;
+import android.service.app.db.data.GenericAccount;
 import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
@@ -23,20 +24,31 @@ public class ImportDataTask<Input> extends GenericDataTask<Input>
     {
         try
         {
-            if (accounts().getFirst().isEmpty()) return buildSyncOutput(EMPTY_ACCOUNT);
+            GenericAccount account = accounts().getFirst();
+            if (account.isEmpty()) return buildSyncOutput(EMPTY_ACCOUNT);
 
-            Set<GenericMessage> messages = restBridge.getMessages(DataFilter.BY_ID);
-            if (Log.isInfoEnabled()) Log.info("messages=" + messages);
-
-            Set<GenericGps> coordinates = restBridge.getCoordinates(DataFilter.BY_ID);
-            if (Log.isInfoEnabled()) Log.info("coordinates=" + coordinates);
-
-            Set<GenericDevice> devices = restBridge.getDevices(DataFilter.ALL);
+            String deviceFilter = "?account=" + account.getEmail();
+            Set<GenericDevice> devices = restBridge.getDevices(DataFilter.BY_VALUE.setFilter(deviceFilter));
             if (Log.isInfoEnabled()) Log.info("devices=" + devices);
+            insert(devices);
 
-//            insert(messages);
-//            insert(coordinates);
-//            insert(devices);
+            for (GenericDevice device: devices().getAll())
+            {
+                String deviceId = String.valueOf(device.getId());
+                String date = device.getCreatedWhen();
+                int limit = -1;
+
+                String filter = String.format("?device=%s&date=%s&n=%s", deviceId, date, limit);
+                DataFilter dataFilter = DataFilter.BY_DATE.setFilter(filter);
+
+                Set<GenericMessage> messages = restBridge.getMessages(dataFilter);
+                if (Log.isInfoEnabled()) Log.info("messages=" + messages);
+                insert(messages);
+
+                Set<GenericGps> coordinates = restBridge.getCoordinates(dataFilter);
+                if (Log.isInfoEnabled()) Log.info("messages=" + messages);
+                insert(coordinates);
+            }
         }
         catch (Exception e)
         {

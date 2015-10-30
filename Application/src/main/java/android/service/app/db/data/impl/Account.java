@@ -14,7 +14,7 @@ public class Account extends Data<GenericAccount> implements GenericAccount
 {
     private String email = GenericDatabase.EMPTY_EMAIL;
 
-    public static final String table_name = "account";
+    public static final String table_name = "accounts";
     public static final String EMAIL = "email";
     private static final Map<String, String> fields = Collections.unmodifiableMap(new LinkedHashMap<String, String>()
     {

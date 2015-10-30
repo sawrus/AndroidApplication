@@ -19,6 +19,11 @@ public abstract class Data<T extends GenericData> extends SqlLiteData<T> impleme
     private String created_when = getCoordinatedUniversalDateTime();
     private String timezone = TimeZone.getDefault().getID() ;
 
+    public void setData(Map<String, Object> data)
+    {
+        throw new UnsupportedOperationException("stub mode, class = " + getClass().getSimpleName() + "; data=" + data);
+    }
+
     public Integer getId()
     {
         return id;

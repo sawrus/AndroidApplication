@@ -19,7 +19,7 @@ public class Device extends Data<GenericDevice> implements GenericDevice
     private String name = "";
     private int account_id = GenericDatabase.EMPTY_DATA;
 
-    public static final String table_name = "device";
+    public static final String table_name = "devices";
     public static final String NAME = "name";
     public static final String ACCOUNT_ID = "account_id";
 

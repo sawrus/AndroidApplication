@@ -1,6 +1,7 @@
 package android.service.app.db.data.impl;
 
 import android.database.Cursor;
+import android.service.app.db.GenericDatabase;
 import android.service.app.db.data.DeviceDependable;
 import android.service.app.db.data.GenericMessage;
 import android.service.app.db.data.GenericDevice;
@@ -19,7 +20,7 @@ public class Message extends Data<GenericMessage> implements DeviceDependable, G
     private int device_id = -2;
     private GenericDevice device = new Device();
 
-    public static final String table_name = "message";
+    public static final String table_name = "messages";
     public static final String ADDRESS = "tofrom";
     public static final String DATA = "data";
     public static final String INCOMING = "incoming";
@@ -85,6 +86,17 @@ public class Message extends Data<GenericMessage> implements DeviceDependable, G
             {put(DEVICE_ID, getDeviceId());}
             {putAll(data);}
         };
+    }
+
+    @Override
+    public void setData(Map<String, Object> data)
+    {
+        setPhone(String.valueOf(data.get(ADDRESS)));
+        setIncoming(1 == Integer.valueOf(String.valueOf(data.get(INCOMING))));
+        setData(String.valueOf(data.get(DATA)));
+
+        //todo: need to use external string key instead of INTEGER
+        setDeviceId(GenericDatabase.DATA_NOT_FOUND);
     }
 
     @NonNull

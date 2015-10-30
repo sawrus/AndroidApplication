@@ -15,11 +15,14 @@ import android.service.app.db.data.impl.Device;
 import android.service.app.db.data.impl.Account;
 import android.service.app.db.data.GenericAccount;
 import android.service.app.http.HttpClient;
+import android.service.app.utils.JsonUtils;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
 
 import com.loopj.android.http.RequestParams;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collections;
@@ -49,47 +52,29 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     }
 
     @Override
-    public Set<GenericMessage> getMessages(DataFilter s)
+    public Set<GenericMessage> getMessages(DataFilter filter)
     {
-//        RequestParams requestParams = new RequestParams();
-//        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
-//        HttpClient.get(Message.table_name + "/device=<device_id>&direction=gte", requestParams, responseHandler);
-
-        final Set<GenericMessage> messages = new LinkedHashSet<>();
-        //used only for testing
-        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
-            @Override
-            public Object execute()
-            {
-                messages.addAll(messages().getActualBySync());
-                return null;
-            }
-        };
-        databaseWork.runInTransaction();
-        //used only for testing
-
-        setIsSuccessLastResponse(true);        
-        return messages;
+        RequestParams requestParams = new RequestParams();
+        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
+        HttpClient.get(Message.table_name + filter, requestParams, responseHandler);
+        if (!isSuccessLastResponse()) return Collections.emptySet();
+        Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
+        Set<GenericMessage> dataSet = new LinkedHashSet<>();
+        for (JSONObject jsonObject: jsonObjects) dataSet.add(JsonUtils.getData(Message.class, jsonObject));
+        return dataSet;
     }
 
     @Override
-    public Set<GenericGps> getCoordinates(DataFilter s)
+    public Set<GenericGps> getCoordinates(DataFilter filter)
     {
-        final Set<GenericGps> coordinates = new LinkedHashSet<>();
-        //used only for testing
-        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
-            @Override
-            public Object execute()
-            {
-                coordinates.addAll(coordinates().getActualBySync());
-                return null;
-            }
-        };
-        databaseWork.runInTransaction();
-        //used only for testing
-
-        setIsSuccessLastResponse(true);
-        return coordinates;
+        RequestParams requestParams = new RequestParams();
+        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
+        HttpClient.get(Message.table_name + filter, requestParams, responseHandler);
+        if (!isSuccessLastResponse()) return Collections.emptySet();
+        Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
+        Set<GenericGps> dataSet = new LinkedHashSet<>();
+        for (JSONObject jsonObject: jsonObjects) dataSet.add(JsonUtils.getData(Gps.class, jsonObject));
+        return dataSet;
     }
 
     @Override
@@ -108,23 +93,16 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     }
 
     @Override
-    public Set<GenericDevice> getDevices(DataFilter s)
+    public Set<GenericDevice> getDevices(DataFilter filter)
     {
-        final Set<GenericDevice> devices = new LinkedHashSet<>();
-        //used only for testing
-        SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
-            @Override
-            public Object execute()
-            {
-                devices.addAll(devices().getActualBySync());
-                return null;
-            }
-        };
-        databaseWork.runInTransaction();
-        //used only for testing
-
-        setIsSuccessLastResponse(true);
-        return devices;
+        RequestParams requestParams = new RequestParams();
+        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
+        HttpClient.get(Message.table_name + filter, requestParams, responseHandler);
+        if (!isSuccessLastResponse()) return Collections.emptySet();
+        Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
+        Set<GenericDevice> dataSet = new LinkedHashSet<>();
+        for (JSONObject jsonObject: jsonObjects) dataSet.add(JsonUtils.getData(GenericDevice.class, jsonObject));
+        return dataSet;
     }
 
     @Override
@@ -168,7 +146,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         for (GenericGps gps: gpsSets)
         {
             Map<String, Object> data = gps.getData();
-            //todo: need to refactor
+            //todo: need to refactor to use external key instead of device model
             data.put(Gps.DEVICE_ID, gps.getDevice().getName());
             setSyncId(gps, data);
             jsonObjects.add(new JSONObject(data));

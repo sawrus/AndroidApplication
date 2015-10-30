@@ -26,6 +26,50 @@ public class RestHttpResponseHandler extends JsonHttpResponseHandler
         this.isSuccessResponse = isSuccessResponse;
     }
 
+    private JSONObject jsonObject = null;
+    private JSONArray jsonArray = null;
+
+    public JSONObject getJsonObject()
+    {
+        return jsonObject;
+    }
+
+    public JSONArray getJsonArray()
+    {
+        return jsonArray;
+    }
+
+    @Override
+    public void onSuccess(int statusCode, Header[] headers, JSONObject response)
+    {
+        Log.info("statusCode=" + statusCode);
+        Log.info("headers=" + Arrays.toString(headers));
+        Log.info("response=" + response);
+
+        jsonObject = response;
+        super.onSuccess(statusCode, headers, response);
+    }
+
+    @Override
+    public void onSuccess(int statusCode, Header[] headers, JSONArray response)
+    {
+        Log.info("statusCode=" + statusCode);
+        Log.info("headers=" + Arrays.toString(headers));
+        Log.info("response=" + response);
+
+        jsonArray = response;
+        super.onSuccess(statusCode, headers, response);
+    }
+
+    @Override
+    public void onSuccess(int statusCode, Header[] headers, String responseString)
+    {
+        Log.info("statusCode=" + statusCode);
+        Log.info("headers=" + Arrays.toString(headers));
+        Log.info("responseString=" + responseString);
+        super.onSuccess(statusCode, headers, responseString);
+    }
+
     @Override
     public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse)
     {

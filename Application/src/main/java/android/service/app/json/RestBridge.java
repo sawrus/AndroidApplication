@@ -3,8 +3,6 @@ package android.service.app.json;
 import android.content.Context;
 import android.service.app.db.data.impl.Data;
 import android.service.app.db.DataBridge;
-import android.service.app.db.sqllite.SqlLiteDatabase;
-import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
 import android.service.app.db.data.GenericData;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
@@ -21,8 +19,6 @@ import android.support.annotation.NonNull;
 
 import com.loopj.android.http.RequestParams;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collections;
@@ -54,9 +50,8 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public Set<GenericMessage> getMessages(DataFilter filter)
     {
-        RequestParams requestParams = new RequestParams();
-        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
-        HttpClient.get(Message.table_name + filter, requestParams, responseHandler);
+        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        HttpClient.get(Message.table_name, filter.getRequestParams(), responseHandler);
         if (!isSuccessLastResponse()) return Collections.emptySet();
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
         Set<GenericMessage> dataSet = new LinkedHashSet<>();
@@ -67,9 +62,8 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public Set<GenericGps> getCoordinates(DataFilter filter)
     {
-        RequestParams requestParams = new RequestParams();
-        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
-        HttpClient.get(Message.table_name + filter, requestParams, responseHandler);
+        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        HttpClient.get(Gps.table_name, filter.getRequestParams(), responseHandler);
         if (!isSuccessLastResponse()) return Collections.emptySet();
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
         Set<GenericGps> dataSet = new LinkedHashSet<>();
@@ -95,9 +89,8 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public Set<GenericDevice> getDevices(DataFilter filter)
     {
-        RequestParams requestParams = new RequestParams();
-        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
-        HttpClient.get(Message.table_name + filter, requestParams, responseHandler);
+        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        HttpClient.get(Device.table_name, filter.getRequestParams(), responseHandler);
         if (!isSuccessLastResponse()) return Collections.emptySet();
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
         Set<GenericDevice> dataSet = new LinkedHashSet<>();
@@ -108,7 +101,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public RestHttpResponseHandler postMessages(Set<GenericMessage> messages)
     {
-        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
+        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
         Set<JSONObject> jsonObjects = new LinkedHashSet<>();
         for (GenericMessage message: messages)
         {
@@ -128,7 +121,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     }
 
     @NonNull
-    private RestHttpResponseHandler getRestHttpResponseHandler()
+    private RestHttpResponseHandler newRestHttpResponseHandlerInstance()
     {
         return new RestHttpResponseHandler();
     }
@@ -141,7 +134,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public RestHttpResponseHandler postGps(Set<GenericGps> gpsSets)
     {
-        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
+        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
         Set<JSONObject> jsonObjects = new LinkedHashSet<>();
         for (GenericGps gps: gpsSets)
         {
@@ -166,7 +159,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         JSONObject jsonObject = new JSONObject(data);
         if (Log.isInfoEnabled()) Log.info("Account.jsonObject=" + jsonObject);
 
-        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
+        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
         HttpClient.postJson(context, Account.table_name, jsonObject, responseHandler);
         setIsSuccessLastResponse(responseHandler.isSuccessResponse());
         return responseHandler;
@@ -179,7 +172,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
         data.put(Device.ACCOUNT_ID, device.getAccount().getEmail());
         JSONObject jsonObject = new JSONObject(data);
         if (Log.isInfoEnabled()) Log.info("Device.jsonObject=" + jsonObject);
-        RestHttpResponseHandler responseHandler = getRestHttpResponseHandler();
+        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
         HttpClient.postJson(context, Device.table_name, jsonObject, responseHandler);
         setIsSuccessLastResponse(responseHandler.isSuccessResponse());
         return responseHandler;

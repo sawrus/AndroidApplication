@@ -13,8 +13,10 @@ var server = http.createServer(handleRequest).listen(
 );
 
 function handleRequest(request, response){
-    switch (request.url) {
+    console.log("Request to " + url.parse(request.url).pathname);
+    switch (url.parse(request.url).pathname) {
         case '/' :
+            console.log('Spy backend welcomes you');
             response.end('Spy backend welcomes you');
             break;
         case '/accounts' :
@@ -35,7 +37,13 @@ function handleRequest(request, response){
             if (isPost(request)) {
                 processPostRequest(request, response, 'messages');
             } else if (isGet(request)) {
-                mongo.getWatcherData(url.parse(request.url, true), 'messages');
+                console.log("get for messages");
+                mongo.getWatcherData(url.parse(request.url, true), 'messages',
+                    function(data) {
+                        response.writeHead(200, "OK", {'Content-Type': 'application/json; charset=UTF-8'});
+                        console.log("Requested data: " + data);
+                        response.end(JSON.stringify(data));
+                    });
             }
             break;
         case '/calls' :

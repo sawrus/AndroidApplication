@@ -43,10 +43,13 @@ var get = function(fn) {
   }
 };
 
-var getWatcherData = function(requestParams, tableName) {
+var getWatcherData = function(requestParams, tableName, onSuccess, onError) {
     // TODO validations
+    var query = {};
+    var options = {};
+
     if (requestParams.device) {
-        var device = requestParams.device;
+        query.device = requestParams.device;
     }
     if (requestParams.syncid) {
         var syncid = requestParams.syncid;
@@ -56,10 +59,37 @@ var getWatcherData = function(requestParams, tableName) {
     }
     if (requestParams.direction) {
         var direction = requestParams.direction;
+        if (date && direction == 'gte') {
+            query.date = {$gte:date};
+        } else if (date && direction == 'lte') {
+            query.date = {$lte:date};
+        } else if (syncid && direction == 'gte') {
+            query.syncid = {$gte:syncid}
+        } else if (syncid && direction == 'lte') {
+            query.syncid = {$lte:syncid}
+        }
     }
+
     if (requestParams.n) {
         var n = requestParams.n;
     }
+    if (+n > 0) {
+        options.limit = n;
+    }
+    options.sort = "date";
+
+    db.collection(tableName).find(query, options).toArray(function(err, docs) {
+        if (err) {
+            if (onError) {
+                onError()
+            } else {
+                console.log("Error while selecting from " + tableName + ": "
+                    + query.toString());
+            }
+        } else {
+            onSuccess(docs);
+        }
+    });
 }
 
 var storeData = function (obj, collection, onSuccess, onError) {

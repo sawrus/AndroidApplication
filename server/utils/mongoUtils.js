@@ -43,13 +43,21 @@ var get = function(fn) {
   }
 };
 
-var getWatcherData = function(requestParams, tableName, onSuccess, onError) {
+var getDevicesByAccount = function(account, onSuccess, onError) {
+    var query = {};
+    query.account = account;
+    db.collection('devices').find(query, {'name' : true}).toArray(function(err, docs) {
+        handleDbResponse(err, docs, 'devices', query, onSuccess, onError);
+    });
+}
+
+var getWatcherData = function(requestParams, collection, onSuccess, onError) {
     // TODO validations
     var query = {};
     var options = {};
 
     if (requestParams.device) {
-        query.device = requestParams.device;
+        query.device_id = requestParams.device;
     }
     if (requestParams.syncid) {
         var syncid = requestParams.syncid;
@@ -78,17 +86,10 @@ var getWatcherData = function(requestParams, tableName, onSuccess, onError) {
     }
     options.sort = "date";
 
-    db.collection(tableName).find(query, options).toArray(function(err, docs) {
-        if (err) {
-            if (onError) {
-                onError()
-            } else {
-                console.log("Error while selecting from " + tableName + ": "
-                    + query.toString());
-            }
-        } else {
-            onSuccess(docs);
-        }
+    console.log(query);
+
+    db.collection(collection).find(query, {}, options).toArray(function(err, docs) {
+        handleDbResponse(err, docs, collection, query, onSuccess, onError);
     });
 }
 
@@ -109,8 +110,22 @@ var storeData = function (obj, collection, onSuccess, onError) {
     });
 }
 
+function handleDbResponse(err, docs, collection, query, onSuccess, onError) {
+    if (err) {
+        if (onError) {
+            onError()
+        } else {
+            console.log("Error while selecting from " + collection + ": "
+                + query.toString());
+        }
+    } else {
+        onSuccess(docs);
+    }
+}
+
 module.exports = {
     get : get,
+    getDevicesByAccount : getDevicesByAccount,
     getWatcherData : getWatcherData,
     storeData : storeData
 }

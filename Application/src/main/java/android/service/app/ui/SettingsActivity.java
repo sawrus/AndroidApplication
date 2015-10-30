@@ -149,6 +149,7 @@ public class SettingsActivity extends PreferenceActivity implements
      */
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener()
     {
+        @TargetApi(Build.VERSION_CODES.GINGERBREAD)
         @Override
         public boolean onPreferenceChange(Preference preference, Object value)
         {
@@ -205,7 +206,7 @@ public class SettingsActivity extends PreferenceActivity implements
                 preference.setSummary(stringValue);
             }
 
-            if (EMAIL_FIELD_NAME.equals(preference.getKey()))
+            if (EMAIL_FIELD_NAME.equals(preference.getKey()) && !String.valueOf(value).isEmpty())
             {
                 AndroidUtils.registerOrReuseAccount(preference.getContext(), String.valueOf(value));
             }

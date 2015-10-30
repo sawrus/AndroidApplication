@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.Build;
+import android.service.app.ShortcutActivity;
 import android.service.app.db.data.GenericAccount;
 import android.service.app.db.data.impl.Account;
 import android.service.app.db.data.impl.Device;
@@ -90,6 +91,8 @@ public enum AndroidUtils
             };
 
             databaseWork.runInTransaction();
+
+            ShortcutActivity.addShortcut(context);
         }
         else
         {

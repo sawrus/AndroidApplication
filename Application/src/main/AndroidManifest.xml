@@ -70,15 +70,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name="android.service.app.ui.SettingsActivity">
-        </activity>
-
-        <activity android:name=".ShortcutActivity" >
+        <activity android:name=".ui.SettingsActivity" android:label="@string/action_settings" >
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
             </intent-filter>
+        </activity>
+        <activity android:name=".ShortcutActivity" >
+
+        </activity>
+        <activity
+            android:name=".ui.BlankActivity"
+            android:label="@string/title_activity_blank" >
         </activity>
     </application>
 

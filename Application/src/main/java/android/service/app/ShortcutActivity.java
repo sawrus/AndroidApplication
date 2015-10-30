@@ -14,6 +14,13 @@ public class ShortcutActivity extends Activity
     {
         Context context = getApplicationContext();
 
+        addShortcut(context);
+
+        super.onCreate(savedInstanceState);
+    }
+
+    public static void addShortcut(Context context)
+    {
         Intent HomeScreenShortCut = new Intent(context,
                 MainActivity.class);
 
@@ -29,7 +36,5 @@ public class ShortcutActivity extends Activity
         addIntent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
 
         context.sendBroadcast(addIntent);
-
-        super.onCreate(savedInstanceState);
     }
 }

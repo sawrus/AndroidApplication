@@ -22,13 +22,13 @@ function handleRequest(request, response){
         case '/accounts' :
             if (isPost(request)) {
                 processPostRequest(request, response, 'accounts');
-            } else {
-                // TODO
+            } else if (isGet(request)) {
+                getAccountInfo(url.parse(request.url, true), response);
             }
             break;
         case '/devices' :
             if (isPost(request)) {
-                processPostRequest(request, response, 'devices');
+                processAddWriterDevice(request, response, 'devices');
             } else {
                 processGetDevicesByAccount(url.parse(request.url, true), response);
             }
@@ -67,12 +67,55 @@ function isGet(request) {
     return request.method == 'GET';
 }
 
+function getAccountInfo(params, response) {
+    console.log(params.query);
+    mongo.getAccountInfo(params.query.account, function(data){
+        response.writeHead(200, "OK", {'Content-Type': 'application/json; charset=UTF-8'});
+        console.log("Requested data: ");
+        console.log(data);
+        response.end(JSON.stringify(data));
+    });
+}
+
+function processAddWriterDevice(request, response) {
+    console.log(request.method + " to " + request.url);
+    var collection = 'devices';
+    var data = '';
+    request.on('data', function (chunk) {
+        console.log(chunk.toString());
+        data += chunk;
+    });
+    request.on('end', function () {
+        mongo.storeData(JSON.parse(data), collection,
+            function (result) {
+                var responseBody = [];
+                console.log("Inserts result: ");
+                console.log(result);
+                for (var i = 0; i < result.ops.length; i++) {
+                    responseBody.push(result.ops[i]._id);
+                }
+                response.writeHead(200, "OK", {'Content-Type': 'text/html'});
+                response.end(JSON.stringify(responseBody));
+            },
+            function(error) {
+                console.log("Error while adding to " + collection + ": " + error);
+                response.writeHead(500, "Error", {'Content-Type': 'text/html'});
+                response.end();
+            });
+    });
+}
+
 function processGetDevicesByAccount(params, response) {
     console.log(params.query);
     mongo.getDevicesByAccount(params.query.account, function(data){
         response.writeHead(200, "OK", {'Content-Type': 'application/json; charset=UTF-8'});
-        console.log("Requested data: " + data);
-        response.end(JSON.stringify(data));
+        console.log("Requested data: ");
+        console.log(data);
+        var responseBody = [];
+        for (var i=0; i<data.length; i++) {
+            responseBody.push(data[i]._id);
+        }
+        response.end(JSON.stringify(responseBody));
     });
 }
 
@@ -81,7 +124,8 @@ function processGetDataRequest(params, collection, response) {
     mongo.getWatcherData(params.query, collection,
         function(data) {
             response.writeHead(200, "OK", {'Content-Type': 'application/json; charset=UTF-8'});
-            console.log("Requested data: " + data);
+            console.log("Requested data: ");
+            console.log(data);
             response.end(JSON.stringify(data));
         });
 }

@@ -43,10 +43,17 @@ var get = function(fn) {
   }
 };
 
-var getDevicesByAccount = function(account, onSuccess, onError) {
+var getAccountInfo = function (email, onSuccess, onError) {
+    var query = {"email" : email};
+    db.collection('accounts').find(query).toArray(function(err, docs) {
+        handleDbResponse(err, docs, 'accounts', query, onSuccess, onError);
+    });
+}
+
+var getDevicesByAccount = function(email, onSuccess, onError) {
     var query = {};
-    query.account = account;
-    db.collection('devices').find(query, {'name' : true}).toArray(function(err, docs) {
+    query.account = email;
+    db.collection('devices').find(query).toArray(function(err, docs) {
         handleDbResponse(err, docs, 'devices', query, onSuccess, onError);
     });
 }
@@ -104,7 +111,7 @@ var storeData = function (obj, collection, onSuccess, onError) {
                     console.log("Error while adding to " + collection + ": " + err);
                 }
             } else {
-                onSuccess();
+                onSuccess(doc);
             }
         });
     });
@@ -125,6 +132,7 @@ function handleDbResponse(err, docs, collection, query, onSuccess, onError) {
 
 module.exports = {
     get : get,
+    getAccountInfo : getAccountInfo,
     getDevicesByAccount : getDevicesByAccount,
     getWatcherData : getWatcherData,
     storeData : storeData

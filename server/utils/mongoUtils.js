@@ -70,18 +70,18 @@ var getWatcherData = function(requestParams, collection, onSuccess, onError) {
         var syncid = requestParams.syncid;
     }
     if (requestParams.date) {
-        var date = requestParams.date;
+        var date = new Date(requestParams.date);
     }
     if (requestParams.direction) {
         var direction = requestParams.direction;
         if (date && direction == 'gte') {
-            query.date = {$gte:date};
+            query.created_when = {$gte:date};
         } else if (date && direction == 'lte') {
-            query.date = {$lte:date};
+            query.created_when = {$lte:date};
         } else if (syncid && direction == 'gte') {
-            query.syncid = {$gte:syncid}
+            query.syncid = {$gte:+syncid}
         } else if (syncid && direction == 'lte') {
-            query.syncid = {$lte:syncid}
+            query.syncid = {$lte:+syncid}
         }
     }
 
@@ -103,6 +103,7 @@ var getWatcherData = function(requestParams, collection, onSuccess, onError) {
 var storeData = function (obj, collection, onSuccess, onError) {
     get(function(db) {
         // store to DB
+        prepareDataForInsert(obj);
         db.collection(collection).insert(obj, {'ordered' : false}, function callback(err, doc) {
             if (err) {
                 if (onError) {
@@ -127,6 +128,18 @@ function handleDbResponse(err, docs, collection, query, onSuccess, onError) {
         }
     } else {
         onSuccess(docs);
+    }
+}
+
+function prepareDataForInsert(obj) {
+    if (Array.isArray(obj)) {
+        for (var i=0; i<obj.lenght; i++) {
+            if (obj[i].created_when) {
+                obj[i].created_when = new Date(obj[i].created_when);
+            }
+        }
+    } else if (obj.created_when) {
+        obj.created_when = new Date(obj.created_when);
     }
 }
 

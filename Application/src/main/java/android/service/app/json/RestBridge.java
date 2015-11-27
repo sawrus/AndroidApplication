@@ -60,7 +60,9 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
         if (!isSuccessLastResponse()) return Collections.emptySet();
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
         Set<GenericMessage> dataSet = new LinkedHashSet<>();
-        for (JSONObject jsonObject: jsonObjects) dataSet.add(JsonUtils.getData(Message.class, jsonObject));
+        for (JSONObject jsonObject: jsonObjects){
+            dataSet.add(JsonUtils.getData(Message.class, jsonObject));
+        }
         return dataSet;
     }
 
@@ -79,25 +81,21 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
     @Override
     public GenericAccount getAccount(DataFilter emailFilter)
     {
-        RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
-        HttpClient.get(Account.table_name, emailFilter.getRequestParams(), responseHandler);
-        if (!isSuccessLastResponse()) return new Account();
-        Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
+        JSONArray jsonArray = HttpClient.get(Account.table_name, "account", emailFilter.getFilter());
+        if (Log.isInfoEnabled()) Log.info("jsonArray: " + jsonArray);
+        if (jsonArray.length() == 0) return new Account();
+        Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(jsonArray);
         return JsonUtils.getData(Account.class, jsonObjects.iterator().next());
     }
 
     @Override
     public boolean checkAccountOnExist(DataFilter emailFilter)
     {
-        RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
-        HttpClient.get(Account.table_name, emailFilter.getRequestParams(), responseHandler);
-        if (!isSuccessLastResponse()) return false;
-        JSONArray jsonArray = responseHandler.getJsonArray();
+        JSONArray jsonArray = HttpClient.get(Account.table_name, "account", emailFilter.getFilter());
         if (Log.isInfoEnabled()) Log.info("jsonArray: " + jsonArray);
+        if (jsonArray.length() == 0) return false;
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(jsonArray);
-        if (Log.isInfoEnabled()) Log.info("jsonObjects: " + jsonObjects);
-        if (jsonObjects.isEmpty()) return false;
-        else return jsonObjects.iterator().next().has("email");
+        return jsonObjects.iterator().next().has("email");
     }
 
     @Override

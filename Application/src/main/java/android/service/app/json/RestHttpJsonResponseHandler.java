@@ -48,6 +48,7 @@ public class RestHttpJsonResponseHandler extends JsonHttpResponseHandler
 
         jsonObject = response;
         super.onSuccess(statusCode, headers, response);
+        setIsSuccessResponse(true);
     }
 
     @Override
@@ -59,6 +60,7 @@ public class RestHttpJsonResponseHandler extends JsonHttpResponseHandler
 
         jsonArray = response;
         super.onSuccess(statusCode, headers, response);
+        setIsSuccessResponse(true);
     }
 
     @Override
@@ -68,6 +70,7 @@ public class RestHttpJsonResponseHandler extends JsonHttpResponseHandler
         Log.info("headers=" + Arrays.toString(headers));
         Log.info("responseString=" + responseString);
         super.onSuccess(statusCode, headers, responseString);
+        setIsSuccessResponse(true);
     }
 
     @Override

@@ -133,12 +133,12 @@ public class Service extends android.app.Service
 
                 if (account.getDescription().contains(AndroidUtils.SUBJECT))
                 {
-                    // sync for subobject functionality
+                    // sync for subobject functionality - READER
                     new ImportDataTask<>(this, context, SyncOutput.getStringCallbackHandler()).execute();
                 }
                 else
                 {
-                    // sync for object functionality
+                    // sync for object functionality - WRITER
                     new ExportDataTask<>(this, context, SyncOutput.getStringCallbackHandler()).execute();
                 }
 

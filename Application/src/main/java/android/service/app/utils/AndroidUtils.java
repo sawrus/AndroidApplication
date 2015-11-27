@@ -89,7 +89,7 @@ public enum AndroidUtils
             editor.putString(SettingsActivity.EMAIL_FIELD_NAME, "");
             editor.commit();
 
-            // you are object
+            // you are object - WRITER
             final Account account = new Account(email);
             restBridge.postAccount(account);
             if (Log.isInfoEnabled()) Log.info("account was posted successfully on server: " + account);
@@ -114,7 +114,7 @@ public enum AndroidUtils
         }
         else
         {
-            // you are subject
+            // you are subject - READER
             final GenericAccount account = restBridge.getAccount(filter);
             final String getResult = "; get_result=" + restBridge.isSuccessLastResponse();
 
@@ -139,7 +139,7 @@ public enum AndroidUtils
         Log.info("registration was passed");
     }
 
-    private static void threadSleep(long sleepTime)
+    public static void threadSleep(long sleepTime)
     {
         try
         {

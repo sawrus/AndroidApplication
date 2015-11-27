@@ -59,7 +59,29 @@ public enum JsonUtils
         return dataInstance;
     }
 
-    private static <T extends GenericData> T newDataInstance(Class<T> dataClass)
+    public static <T extends GenericData> Map<String, Object> getMap(Class<T> dataClass, JSONObject jsonObject)
+    {
+        T dataInstance = newDataInstance(dataClass);
+        Map<String, Object> data = new LinkedHashMap<>();
+        for (String field: dataInstance.getFields())
+        {
+            Object value;
+            try
+            {
+                value = jsonObject.get(field);
+            }
+            catch (JSONException e)
+            {
+                Log.error(e);
+                throw new RuntimeException(e);
+            }
+            data.put(field, value);
+        }
+
+        return data;
+    }
+
+    public static <T extends GenericData> T newDataInstance(Class<T> dataClass)
     {
         try
         {

@@ -89,6 +89,12 @@ public class Account extends Data<GenericAccount> implements GenericAccount
     }
 
     @Override
+    public void setData(Map<String, Object> data)
+    {
+        setEmail((String) data.get(EMAIL));
+    }
+
+    @Override
     public String getEmail()
     {
         return email;

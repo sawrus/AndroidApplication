@@ -22,6 +22,7 @@ import java.util.Set;
 public abstract class GenericDataTask<Input> extends AsyncTask<Input, Void, SyncOutput> implements GenericDatabase
 {
     public static final String EMPTY_ACCOUNT = "empty account";
+    public static final String EMPTY_DEVICE = "empty device";
     protected final SqlLiteDatabaseHelper sqlLiteDatabaseHelper;
     private final CallbackHandler<SyncOutput> handler;
     protected final RestBridge restBridge;

@@ -28,6 +28,10 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
             if (Log.isInfoEnabled()) Log.info("account: " + account);
             if (account.isEmpty()) return buildSyncOutput(EMPTY_ACCOUNT);
 
+            GenericDevice device = devices().getFirst();
+            if (Log.isInfoEnabled()) Log.info("device: " + device);
+            if (device.isEmpty()) return buildSyncOutput(EMPTY_DEVICE);
+
             Set<GenericMessage> actualMessagesBySync = messages().getActualBySync();
             Set<GenericGps> actualCoordinatesBySync = coordinates().getActualBySync();
 

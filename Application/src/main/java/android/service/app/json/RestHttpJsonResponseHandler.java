@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import cz.msebera.android.httpclient.Header;
 
-public class RestHttpResponseHandler extends JsonHttpResponseHandler
+public class RestHttpJsonResponseHandler extends JsonHttpResponseHandler
 {
     private volatile boolean isSuccessResponse = true;
 

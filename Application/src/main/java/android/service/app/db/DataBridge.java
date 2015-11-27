@@ -20,5 +20,5 @@ public interface DataBridge<Criteria, ResponseHandler>
     ResponseHandler postAccount(GenericAccount account);
 
     Set<GenericDevice> getDevices(Criteria criteria);
-    ResponseHandler postDevice(GenericDevice device);
+    ResponseHandler postDevice(GenericDevice device, String email);
 }

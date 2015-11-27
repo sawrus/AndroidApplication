@@ -1,9 +1,12 @@
 package android.service.app.utils;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.service.app.ShortcutActivity;
 import android.service.app.db.data.GenericAccount;
 import android.service.app.db.data.GenericDevice;
@@ -12,7 +15,10 @@ import android.service.app.db.data.impl.Device;
 import android.service.app.db.sqllite.SqlLiteDatabase;
 import android.service.app.json.DataFilter;
 import android.service.app.json.RestBridge;
+import android.service.app.json.RestHttpTextResponseHandler;
+import android.service.app.ui.SettingsActivity;
 
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -43,6 +49,7 @@ public enum AndroidUtils
         return (Account) databaseWork.run();
     }
 
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
     public static void registerOrReuseAccount(Context context, final String email)
     {
         final RestBridge restBridge = new RestBridge(context);
@@ -77,9 +84,15 @@ public enum AndroidUtils
 
         if (!accountExistOnExternalStorage)
         {
-            // you are subject
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putString(SettingsActivity.EMAIL_FIELD_NAME, "");
+            editor.commit();
+
+            // you are object
             final Account account = new Account(email);
             restBridge.postAccount(account);
+            if (Log.isInfoEnabled()) Log.info("account was posted successfully on server: " + account);
             final String postResult = "; post_result: " + restBridge.isSuccessLastResponse();
 
             databaseWork = new SqlLiteDatabase.DatabaseWork(context)
@@ -87,7 +100,7 @@ public enum AndroidUtils
                 @Override
                 public Object execute()
                 {
-                    account.setDescription(SUBJECT + postResult);
+                    account.setDescription(OBJECT + postResult);
                     account.setId(insert(account));
                     updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
                     updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
@@ -96,23 +109,12 @@ public enum AndroidUtils
                 }
             };
             databaseWork.runInTransaction();
-            databaseWork = new SqlLiteDatabase.DatabaseWork(context)
-            {
-                @Override
-                public Object execute()
-                {
-                    Device device = new Device(AndroidUtils.getDeviceName(), account.getId());
-                    device.setId(insert(device));
-                    return devices().getFirst();
-                }
-            };
-            GenericDevice device = ((GenericDevice) databaseWork.runInTransaction());
-            restBridge.postDevice(device);
-            ShortcutActivity.addShortcut(context);
+            final Device device = new Device(AndroidUtils.getDeviceName(), account.getId());
+            restBridge.postDevice(device, email);
         }
         else
         {
-            // you are object
+            // you are subject
             final GenericAccount account = restBridge.getAccount(filter);
             final String getResult = "; get_result=" + restBridge.isSuccessLastResponse();
 
@@ -121,12 +123,9 @@ public enum AndroidUtils
                 @Override
                 public Object execute()
                 {
-                    account.setDescription(OBJECT + getResult);
+                    account.setDescription(SUBJECT + getResult);
                     account.setId(insert(account));
-
                     Integer accountId = account.getId();
-                    insert(new Device(AndroidUtils.getDeviceName(), accountId));
-
                     updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
                     updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
                     updateOrInsertSyncIfNeeded(devices().getSyncForUpdate(account));
@@ -134,9 +133,22 @@ public enum AndroidUtils
                 }
             };
             databaseWork.runInTransaction();
+            ShortcutActivity.addShortcut(context);
         }
 
         Log.info("registration was passed");
+    }
+
+    private static void threadSleep(long sleepTime)
+    {
+        try
+        {
+            Thread.sleep(sleepTime);
+        }
+        catch (InterruptedException e)
+        {
+            Log.error(e);
+        }
     }
 
     public static void printDataOnScreen(String message, ContextWrapper wrapper)

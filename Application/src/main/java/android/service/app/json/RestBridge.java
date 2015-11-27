@@ -1,6 +1,7 @@
 package android.service.app.json;
 
 import android.content.Context;
+import android.service.app.db.GenericDatabase;
 import android.service.app.db.data.impl.Data;
 import android.service.app.db.DataBridge;
 import android.service.app.db.data.GenericData;
@@ -12,11 +13,14 @@ import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.impl.Device;
 import android.service.app.db.data.impl.Account;
 import android.service.app.db.data.GenericAccount;
+import android.service.app.db.sqllite.SqlLiteDatabase;
 import android.service.app.http.HttpClient;
+import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.JsonUtils;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
 
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
@@ -27,7 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandler>
+public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandler>
 {
     private final Context context;
 
@@ -51,7 +55,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public Set<GenericMessage> getMessages(DataFilter filter)
     {
-        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
         HttpClient.get(Message.table_name, filter.getRequestParams(), responseHandler);
         if (!isSuccessLastResponse()) return Collections.emptySet();
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
@@ -63,7 +67,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public Set<GenericGps> getCoordinates(DataFilter filter)
     {
-        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
         HttpClient.get(Gps.table_name, filter.getRequestParams(), responseHandler);
         if (!isSuccessLastResponse()) return Collections.emptySet();
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
@@ -75,7 +79,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public GenericAccount getAccount(DataFilter emailFilter)
     {
-        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
         HttpClient.get(Account.table_name, emailFilter.getRequestParams(), responseHandler);
         if (!isSuccessLastResponse()) return new Account();
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
@@ -85,7 +89,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public boolean checkAccountOnExist(DataFilter emailFilter)
     {
-        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
         HttpClient.get(Account.table_name, emailFilter.getRequestParams(), responseHandler);
         if (!isSuccessLastResponse()) return false;
         JSONArray jsonArray = responseHandler.getJsonArray();
@@ -99,7 +103,7 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public Set<GenericDevice> getDevices(DataFilter filter)
     {
-        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
         RequestParams params = filter.getRequestParams();
         HttpClient.get(Device.table_name, params, responseHandler);
         if (!isSuccessLastResponse()) return Collections.emptySet();
@@ -113,31 +117,34 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     }
 
     @Override
-    public RestHttpResponseHandler postMessages(Set<GenericMessage> messages)
+    public AsyncHttpResponseHandler postMessages(Set<GenericMessage> messages)
     {
-        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        RestHttpTextResponseHandler responseHandler = newRestHttpTextResponseHandlerInstance();
+
         Set<JSONObject> jsonObjects = new LinkedHashSet<>();
         for (GenericMessage message: messages)
         {
             Map<String, Object> data = message.getData();
-            data.put(Message.DEVICE_ID, message.getDevice().getName());
+            if (message.getDeviceId() == GenericDatabase.EMPTY_DATA) continue;
+            GenericDevice device = message.getDevice();
+            data.put(Message.DEVICE_ID, device.getDescription());
             setSyncId(message, data);
 
             jsonObjects.add(new JSONObject(data));
-            responseHandler = new RestHttpResponseHandler();
+            responseHandler = newRestHttpTextResponseHandlerInstance();
         }
 
-        if (Log.isInfoEnabled()) Log.info("Message.jsonObjects=" + jsonObjects);
+        if (Log.isInfoEnabled()) Log.info("Message.jsonObjects: " + jsonObjects);
+        if (jsonObjects.isEmpty()) return null;
         HttpClient.postJson(context, Message.table_name, jsonObjects, responseHandler);
-
         setIsSuccessLastResponse(responseHandler.isSuccessResponse());
         return responseHandler;
     }
 
     @NonNull
-    private RestHttpResponseHandler newRestHttpResponseHandlerInstance()
+    private RestHttpJsonResponseHandler newRestHttpJsonResponseHandlerInstance()
     {
-        return new RestHttpResponseHandler();
+        return new RestHttpJsonResponseHandler();
     }
 
     private void setSyncId(GenericData bean, Map<String, Object> data)
@@ -146,51 +153,78 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     }
 
     @Override
-    public RestHttpResponseHandler postGps(Set<GenericGps> gpsSets)
+    public AsyncHttpResponseHandler postGps(Set<GenericGps> gpsSets)
     {
-        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        RestHttpTextResponseHandler responseHandler = newRestHttpTextResponseHandlerInstance();
+
         Set<JSONObject> jsonObjects = new LinkedHashSet<>();
         for (GenericGps gps: gpsSets)
         {
             Map<String, Object> data = gps.getData();
-            //todo: need to refactor to use external key instead of device model
-            data.put(Gps.DEVICE_ID, gps.getDevice().getName());
+            if (gps.getDeviceId() == GenericDatabase.EMPTY_DATA) continue;
+            data.put(Gps.DEVICE_ID, gps.getDevice().getDescription());
             setSyncId(gps, data);
             jsonObjects.add(new JSONObject(data));
-            responseHandler = new RestHttpResponseHandler();
+            responseHandler = newRestHttpTextResponseHandlerInstance();
         }
 
-        if (Log.isInfoEnabled()) Log.info("Gps.jsonObjects=" + jsonObjects);
+        if (Log.isInfoEnabled()) Log.info("Gps.jsonObjects: " + jsonObjects);
+        if (jsonObjects.isEmpty()) return null;
         HttpClient.postJson(context, Gps.table_name, jsonObjects, responseHandler);
         setIsSuccessLastResponse(responseHandler.isSuccessResponse());
         return responseHandler;
     }
 
     @Override
-    public RestHttpResponseHandler postAccount(GenericAccount account)
+    public AsyncHttpResponseHandler postAccount(GenericAccount account)
     {
         Map<String, Object> data = account.getData();
         JSONObject jsonObject = new JSONObject(data);
-        if (Log.isInfoEnabled()) Log.info("Account.jsonObject=" + jsonObject);
-
-        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        if (Log.isInfoEnabled()) Log.info("Account.jsonObject: " + jsonObject);
+        RestHttpTextResponseHandler responseHandler = newRestHttpTextResponseHandlerInstance();
         HttpClient.postJson(context, Account.table_name, jsonObject, responseHandler);
         setIsSuccessLastResponse(responseHandler.isSuccessResponse());
         return responseHandler;
     }
 
     @Override
-    public RestHttpResponseHandler postDevice(GenericDevice device)
+    public AsyncHttpResponseHandler postDevice(GenericDevice device, String email)
     {
         Map<String, Object> data = device.getData();
-        String email = device.getAccount().getEmail();
         if (Log.isInfoEnabled()) Log.info("email: " + email);
         data.put("account", email);
         JSONObject jsonObject = new JSONObject(data);
         if (Log.isInfoEnabled()) Log.info("Device.jsonObject: " + jsonObject);
-        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        RestHttpTextResponseHandler responseHandler = newRestHttpTextResponseHandlerInstance();
+        responseHandler.setAction(new RestHttpTextResponseHandler.AfterCompleteAction() {
+            @Override
+            public Object execute(final String response)
+            {
+                SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context)
+                {
+                    @Override
+                    public Object execute()
+                    {
+                        GenericAccount account = accounts().getFirst();
+                        Device device = new Device(AndroidUtils.getDeviceName(), account.getId());
+                        device.setDescription(response.substring(2, response.length()-2));
+                        device.setId(insert(device));
+                        return devices().getFirst();
+                    }
+                };
+
+                return databaseWork.runInTransaction();
+            }
+        });
+
         HttpClient.postJson(context, Device.table_name, jsonObject, responseHandler);
         setIsSuccessLastResponse(responseHandler.isSuccessResponse());
         return responseHandler;
+    }
+
+    @NonNull
+    private RestHttpTextResponseHandler newRestHttpTextResponseHandlerInstance()
+    {
+        return new RestHttpTextResponseHandler();
     }
 }

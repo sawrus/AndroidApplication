@@ -25,13 +25,13 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
         try
         {
             GenericAccount account = accounts().getFirst();
-            if (Log.isInfoEnabled()) Log.info("account=" + account);
+            if (Log.isInfoEnabled()) Log.info("account: " + account);
             if (account.isEmpty()) return buildSyncOutput(EMPTY_ACCOUNT);
 
             Set<GenericMessage> actualMessagesBySync = messages().getActualBySync();
             Set<GenericGps> actualCoordinatesBySync = coordinates().getActualBySync();
 
-            if (Log.isInfoEnabled()) Log.info("actualMessagesBySync=" + actualMessagesBySync);
+            if (Log.isInfoEnabled()) Log.info("actualMessagesBySync: " + actualMessagesBySync);
             if (!actualMessagesBySync.isEmpty())
             {
                 restBridge.postMessages(actualMessagesBySync);
@@ -39,7 +39,7 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
                     updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
             }
 
-            if (Log.isInfoEnabled()) Log.info("actualCoordinatesBySync=" + actualCoordinatesBySync);
+            if (Log.isInfoEnabled()) Log.info("actualCoordinatesBySync: " + actualCoordinatesBySync);
             if (!actualCoordinatesBySync.isEmpty())
             {
                 restBridge.postGps(actualCoordinatesBySync);

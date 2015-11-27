@@ -45,7 +45,7 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
 
         boolean isObjectAccount = AndroidUtils.isObjectAccount(getApplicationContext());
-        Log.info("isObjectAccount=" + isObjectAccount);
+        Log.info("isObjectAccount: " + isObjectAccount);
         if (isObjectAccount)
         {
             startService(new Intent(this, Service.class));

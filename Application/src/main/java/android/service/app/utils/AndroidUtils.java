@@ -6,11 +6,14 @@ import android.content.Intent;
 import android.os.Build;
 import android.service.app.ShortcutActivity;
 import android.service.app.db.data.GenericAccount;
+import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.impl.Account;
 import android.service.app.db.data.impl.Device;
 import android.service.app.db.sqllite.SqlLiteDatabase;
 import android.service.app.json.DataFilter;
 import android.service.app.json.RestBridge;
+
+import com.loopj.android.http.RequestParams;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -44,6 +47,9 @@ public enum AndroidUtils
     {
         final RestBridge restBridge = new RestBridge(context);
         DataFilter filter = DataFilter.BY_VALUE.setFilter(email);
+        RequestParams requestParams = new RequestParams();
+        requestParams.put("account", email);
+        filter.setRequestParams(requestParams);
 
         final AtomicBoolean accountExistOnInternalStorage = new AtomicBoolean(false);
         SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context)
@@ -66,15 +72,15 @@ public enum AndroidUtils
         }
 
         boolean accountExistOnExternalStorage = restBridge.checkAccountOnExist(filter);
-        final String checkResult = "; get_result=" + restBridge.isSuccessLastResponse();
-        Log.info("accountExistOnExternalStorage=" + accountExistOnExternalStorage + checkResult);
+        final String checkResult = "; get_result: " + restBridge.isSuccessLastResponse();
+        Log.info("accountExistOnExternalStorage: " + accountExistOnExternalStorage + checkResult);
 
         if (!accountExistOnExternalStorage)
         {
             // you are subject
             final Account account = new Account(email);
             restBridge.postAccount(account);
-            final String postResult = "; post_result=" + restBridge.isSuccessLastResponse();
+            final String postResult = "; post_result: " + restBridge.isSuccessLastResponse();
 
             databaseWork = new SqlLiteDatabase.DatabaseWork(context)
             {
@@ -89,9 +95,19 @@ public enum AndroidUtils
                     return account.getId();
                 }
             };
-
             databaseWork.runInTransaction();
-
+            databaseWork = new SqlLiteDatabase.DatabaseWork(context)
+            {
+                @Override
+                public Object execute()
+                {
+                    Device device = new Device(AndroidUtils.getDeviceName(), account.getId());
+                    device.setId(insert(device));
+                    return devices().getFirst();
+                }
+            };
+            GenericDevice device = ((GenericDevice) databaseWork.runInTransaction());
+            restBridge.postDevice(device);
             ShortcutActivity.addShortcut(context);
         }
         else
@@ -117,7 +133,6 @@ public enum AndroidUtils
                     return accountId;
                 }
             };
-
             databaseWork.runInTransaction();
         }
 

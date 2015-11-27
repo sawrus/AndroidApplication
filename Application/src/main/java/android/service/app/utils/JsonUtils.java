@@ -18,6 +18,7 @@ public enum JsonUtils
     public static Set<JSONObject> getJsonObjects(JSONArray jsonArray)
     {
         Set<JSONObject> jsonObjects = new LinkedHashSet<>();
+        if (jsonArray == null || jsonArray.length() == 0) return jsonObjects;
         for (int i = 0; i < jsonArray.length(); i++)
         {
             JSONObject jsonObject;

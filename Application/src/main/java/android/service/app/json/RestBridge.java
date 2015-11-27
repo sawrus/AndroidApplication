@@ -19,6 +19,7 @@ import android.support.annotation.NonNull;
 
 import com.loopj.android.http.RequestParams;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Collections;
@@ -74,27 +75,40 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     @Override
     public GenericAccount getAccount(DataFilter emailFilter)
     {
-        setIsSuccessLastResponse(true);
-        return new Account(emailFilter.getFilter());
+        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        HttpClient.get(Account.table_name, emailFilter.getRequestParams(), responseHandler);
+        if (!isSuccessLastResponse()) return new Account();
+        Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
+        return JsonUtils.getData(Account.class, jsonObjects.iterator().next());
     }
 
     @Override
-    public boolean checkAccountOnExist(DataFilter email)
+    public boolean checkAccountOnExist(DataFilter emailFilter)
     {
-        setIsSuccessLastResponse(true);
-        //used only for testing
-        return true;
+        RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
+        HttpClient.get(Account.table_name, emailFilter.getRequestParams(), responseHandler);
+        if (!isSuccessLastResponse()) return false;
+        JSONArray jsonArray = responseHandler.getJsonArray();
+        if (Log.isInfoEnabled()) Log.info("jsonArray: " + jsonArray);
+        Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(jsonArray);
+        if (Log.isInfoEnabled()) Log.info("jsonObjects: " + jsonObjects);
+        if (jsonObjects.isEmpty()) return false;
+        else return jsonObjects.iterator().next().has("email");
     }
 
     @Override
     public Set<GenericDevice> getDevices(DataFilter filter)
     {
         RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
-        HttpClient.get(Device.table_name, filter.getRequestParams(), responseHandler);
+        RequestParams params = filter.getRequestParams();
+        HttpClient.get(Device.table_name, params, responseHandler);
         if (!isSuccessLastResponse()) return Collections.emptySet();
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
         Set<GenericDevice> dataSet = new LinkedHashSet<>();
-        for (JSONObject jsonObject: jsonObjects) dataSet.add(JsonUtils.getData(GenericDevice.class, jsonObject));
+        for (JSONObject jsonObject: jsonObjects){
+            String deviceId = jsonObject.toString();
+            dataSet.add(new Device(deviceId, -2));
+        }
         return dataSet;
     }
 
@@ -169,9 +183,11 @@ public class RestBridge implements DataBridge<DataFilter, RestHttpResponseHandle
     public RestHttpResponseHandler postDevice(GenericDevice device)
     {
         Map<String, Object> data = device.getData();
-        data.put(Device.ACCOUNT_ID, device.getAccount().getEmail());
+        String email = device.getAccount().getEmail();
+        if (Log.isInfoEnabled()) Log.info("email: " + email);
+        data.put("account", email);
         JSONObject jsonObject = new JSONObject(data);
-        if (Log.isInfoEnabled()) Log.info("Device.jsonObject=" + jsonObject);
+        if (Log.isInfoEnabled()) Log.info("Device.jsonObject: " + jsonObject);
         RestHttpResponseHandler responseHandler = newRestHttpResponseHandlerInstance();
         HttpClient.postJson(context, Device.table_name, jsonObject, responseHandler);
         setIsSuccessLastResponse(responseHandler.isSuccessResponse());

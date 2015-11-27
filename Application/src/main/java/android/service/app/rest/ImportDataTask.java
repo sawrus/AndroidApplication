@@ -37,26 +37,28 @@ public class ImportDataTask<Input> extends GenericDataTask<Input>
             RequestParams requestDeviceParams = new RequestParams();
             requestDeviceParams.put("account", account.getEmail());
             Set<GenericDevice> devices = restBridge.getDevices(DataFilter.BY_VALUE.setRequestParams(requestDeviceParams));
-            if (Log.isInfoEnabled()) Log.info("devices=" + devices);
+            for (GenericDevice device: devices) device.setAccountId(account.getId());
+            if (Log.isInfoEnabled()) Log.info("devices: " + devices);
             insert(devices);
 
             Date dateForTrackData = getDateForTrackData();
-            if (Log.isInfoEnabled()) Log.info("dateForTrackData=" + dateForTrackData);
+            if (Log.isInfoEnabled()) Log.info("dateForTrackData: " + dateForTrackData);
 
             for (GenericDevice device: devices().getAll())
             {
                 RequestParams requestDataParams = new RequestParams();
-                requestDataParams.put("device", device.getId());
+                requestDataParams.put("device", device.getName());
+                requestDataParams.put("direction", "lte");
                 requestDataParams.put("date", dateForTrackData);
                 requestDataParams.put("n", DATA_LIMIT);
                 DataFilter dataFilter = DataFilter.BY_DATE.setRequestParams(requestDataParams);
 
                 Set<GenericMessage> messages = restBridge.getMessages(dataFilter);
-                if (Log.isInfoEnabled()) Log.info("messages=" + messages);
+                if (Log.isInfoEnabled()) Log.info("messages: " + messages);
                 insert(messages);
 
                 Set<GenericGps> coordinates = restBridge.getCoordinates(dataFilter);
-                if (Log.isInfoEnabled()) Log.info("messages=" + messages);
+                if (Log.isInfoEnabled()) Log.info("messages: " + messages);
                 insert(coordinates);
             }
         }

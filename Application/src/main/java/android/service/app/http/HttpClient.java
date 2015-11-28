@@ -50,11 +50,13 @@ public enum HttpClient
 
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler)
     {
-        getClient().get(getAbsoluteUrl(url), params, responseHandler);
+        String absoluteUrl = getAbsoluteUrl(url);
+        if (Log.isInfoEnabled()) Log.info("URL: " + AsyncHttpClient.getUrlWithQueryString(true, absoluteUrl, params));
+        getClient().get(absoluteUrl, params, responseHandler);
     }
 
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)
-    public static JSONArray get(final String _url, String key, String value)
+    public static String get(final String _url, String key, String value)
     {
         try
         {
@@ -71,7 +73,7 @@ public enum HttpClient
             if (data.isEmpty())
                 throw new IllegalStateException("empty response by account");
             else
-                return new JSONArray(data);
+                return data;
         }
         catch (Exception e)
         {

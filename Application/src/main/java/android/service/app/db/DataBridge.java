@@ -9,10 +9,10 @@ import java.util.Set;
 
 public interface DataBridge<Criteria, ResponseHandler>
 {
-    Set<GenericMessage> getMessages(Criteria criteria);
+    Set<GenericMessage> getMessages(Criteria criteria, GenericDevice device);
     ResponseHandler postMessages(Set<GenericMessage> messages);
 
-    Set<GenericGps> getCoordinates(Criteria criteria);
+    Set<GenericGps> getCoordinates(Criteria criteria, GenericDevice device);
     ResponseHandler postGps(Set<GenericGps> gpsSets);
 
     boolean checkAccountOnExist(Criteria email);

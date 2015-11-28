@@ -92,11 +92,10 @@ public class Message extends Data<GenericMessage> implements DeviceDependable, G
     public void setData(Map<String, Object> data)
     {
         setPhone(String.valueOf(data.get(ADDRESS)));
-        setIncoming(1 == Integer.valueOf(String.valueOf(data.get(INCOMING))));
+        setIncoming(Boolean.valueOf(String.valueOf(data.get(INCOMING))));
         setData(String.valueOf(data.get(DATA)));
-
-        //todo: need to use external string key instead of INTEGER
-        setDeviceId(GenericDatabase.DATA_NOT_FOUND);
+        setTimezone(String.valueOf(data.get(TIMEZONE)));
+        setCreatedWhen(String.valueOf(data.get(CREATED_WHEN)));
     }
 
     @NonNull

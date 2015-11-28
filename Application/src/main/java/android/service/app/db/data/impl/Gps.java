@@ -1,5 +1,6 @@
 package android.service.app.db.data.impl;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.service.app.db.data.DeviceDependable;
 import android.service.app.db.data.GenericGps;
@@ -121,6 +122,15 @@ public class Gps extends Data<GenericGps> implements DeviceDependable, GenericGp
     public void setLongitude(double longitude)
     {
         this.longitude = longitude;
+    }
+
+    @Override
+    public void setData(Map<String, Object> data)
+    {
+        setLongitude(Double.valueOf((String) data.get(LONGITUDE)));
+        setLatitude(Double.valueOf((String) data.get(LATITUDE)));
+        setTimezone(String.valueOf(data.get(TIMEZONE)));
+        setCreatedWhen(String.valueOf(data.get(CREATED_WHEN)));
     }
 
     @Override

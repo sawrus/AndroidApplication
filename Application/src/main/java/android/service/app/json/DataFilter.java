@@ -1,5 +1,7 @@
 package android.service.app.json;
 
+import android.content.Context;
+
 import com.loopj.android.http.RequestParams;
 
 public enum DataFilter
@@ -10,6 +12,17 @@ public enum DataFilter
     BY_DATE;
 
     private String filter;
+    private Context context;
+
+    public Context getContext()
+    {
+        return context;
+    }
+
+    public void setContext(Context context)
+    {
+        this.context = context;
+    }
 
     public String getFilter()
     {

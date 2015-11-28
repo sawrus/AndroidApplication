@@ -1,6 +1,8 @@
 package android.service.app.json;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.os.Build;
 import android.service.app.db.GenericDatabase;
 import android.service.app.db.data.impl.Data;
 import android.service.app.db.DataBridge;
@@ -24,6 +26,7 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collections;
@@ -53,35 +56,90 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
     }
 
     @Override
-    public Set<GenericMessage> getMessages(DataFilter filter)
+    public Set<GenericMessage> getMessages(final DataFilter filter, final GenericDevice device)
     {
-        RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
+        final RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
+        responseHandler.setAction(new RestHttpJsonResponseHandler.AfterCompleteAction() {
+            @TargetApi(Build.VERSION_CODES.KITKAT)
+            @Override
+            public Object execute(Object response)
+            {
+                if (Log.isInfoEnabled()) Log.info("messages.response: " + response);
+                Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
+                final Set<GenericMessage> dataSet = new LinkedHashSet<>();
+                for (JSONObject jsonObject: jsonObjects){
+                    Message data = JsonUtils.getData(Message.class, jsonObject);
+                    data.setDeviceId(device.getId());
+                    dataSet.add(data);
+                }
+                if (!dataSet.isEmpty())
+                {
+                    SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(filter.getContext())
+                    {
+                        @Override
+                        public Object execute()
+                        {
+                            return insert(dataSet);
+                        }
+                    };
+                    databaseWork.runInTransaction();
+                }
+                return dataSet;
+            }
+        });
+
         HttpClient.get(Message.table_name, filter.getRequestParams(), responseHandler);
-        if (!isSuccessLastResponse()) return Collections.emptySet();
-        Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
-        Set<GenericMessage> dataSet = new LinkedHashSet<>();
-        for (JSONObject jsonObject: jsonObjects){
-            dataSet.add(JsonUtils.getData(Message.class, jsonObject));
-        }
-        return dataSet;
+        return Collections.emptySet();
     }
 
     @Override
-    public Set<GenericGps> getCoordinates(DataFilter filter)
+    public Set<GenericGps> getCoordinates(final DataFilter filter, final GenericDevice device)
     {
-        RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
+        final RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
+        responseHandler.setAction(new RestHttpJsonResponseHandler.AfterCompleteAction() {
+            @TargetApi(Build.VERSION_CODES.KITKAT)
+            @Override
+            public Object execute(Object response)
+            {
+                if (Log.isInfoEnabled()) Log.info("coordinates.response: " + response);
+                Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
+                final Set<GenericGps> dataSet = new LinkedHashSet<>();
+                for (JSONObject jsonObject: jsonObjects){
+                    Gps data = JsonUtils.getData(Gps.class, jsonObject);
+                    data.setDeviceId(device.getId());
+                    dataSet.add(data);
+                }
+                if (!dataSet.isEmpty())
+                {
+                    SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(filter.getContext())
+                    {
+                        @Override
+                        public Object execute()
+                        {
+                            return insert(dataSet);
+                        }
+                    };
+                    databaseWork.runInTransaction();
+                }
+                return dataSet;
+            }
+        });
         HttpClient.get(Gps.table_name, filter.getRequestParams(), responseHandler);
-        if (!isSuccessLastResponse()) return Collections.emptySet();
-        Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
-        Set<GenericGps> dataSet = new LinkedHashSet<>();
-        for (JSONObject jsonObject: jsonObjects) dataSet.add(JsonUtils.getData(Gps.class, jsonObject));
-        return dataSet;
+        return Collections.emptySet();
     }
 
     @Override
     public GenericAccount getAccount(DataFilter emailFilter)
     {
-        JSONArray jsonArray = HttpClient.get(Account.table_name, "account", emailFilter.getFilter());
+        JSONArray jsonArray;
+        try
+        {
+            jsonArray = new JSONArray(HttpClient.get(Account.table_name, "account", emailFilter.getFilter()));
+        }
+        catch (JSONException e)
+        {
+            throw new IllegalStateException(e);
+        }
         if (Log.isInfoEnabled()) Log.info("jsonArray: " + jsonArray);
         if (jsonArray.length() == 0) return new Account();
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(jsonArray);
@@ -91,7 +149,15 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
     @Override
     public boolean checkAccountOnExist(DataFilter emailFilter)
     {
-        JSONArray jsonArray = HttpClient.get(Account.table_name, "account", emailFilter.getFilter());
+        JSONArray jsonArray = null;
+        try
+        {
+            jsonArray = new JSONArray(HttpClient.get(Account.table_name, "account", emailFilter.getFilter()));
+        }
+        catch (JSONException e)
+        {
+            throw new IllegalStateException(e);
+        }
         if (Log.isInfoEnabled()) Log.info("jsonArray: " + jsonArray);
         if (jsonArray.length() == 0) return false;
         Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(jsonArray);
@@ -101,15 +167,17 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
     @Override
     public Set<GenericDevice> getDevices(DataFilter filter)
     {
-        RestHttpJsonResponseHandler responseHandler = newRestHttpJsonResponseHandlerInstance();
-        RequestParams params = filter.getRequestParams();
-        HttpClient.get(Device.table_name, params, responseHandler);
-        if (!isSuccessLastResponse()) return Collections.emptySet();
-        Set<JSONObject> jsonObjects = JsonUtils.getJsonObjects(responseHandler.getJsonArray());
+        String deviceIds = HttpClient.get(Device.table_name, "account", filter.getFilter());
+        deviceIds = deviceIds.substring(1, deviceIds.length()-1);
+        String[] ids = deviceIds.split(",");
         Set<GenericDevice> dataSet = new LinkedHashSet<>();
-        for (JSONObject jsonObject: jsonObjects){
-            String deviceId = jsonObject.toString();
-            dataSet.add(new Device(deviceId, -2));
+        for (String id1 : ids)
+        {
+            String id = id1;
+            id = id.substring(1, id.length() - 1);
+            Device device = new Device(id, -2);
+            device.setDescription(id);
+            dataSet.add(device);
         }
         return dataSet;
     }

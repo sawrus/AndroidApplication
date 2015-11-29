@@ -38,7 +38,6 @@ public class Service extends android.app.Service
     {
         app = (AndroidApplication) getApplication();
         app.service = this;
-        app.serviceOnCreate = true;
 
         SmsObserver smsObserver = new SmsObserver(this, handler);
         IntentFilter smsFilter = new IntentFilter(SMS_RECEIVED);
@@ -98,7 +97,6 @@ public class Service extends android.app.Service
         };
 
         app.service = this;
-        app.serviceOnCreate = false;
 
         runSync(getApplicationContext());
 

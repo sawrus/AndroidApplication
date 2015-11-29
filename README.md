@@ -1,28 +1,16 @@
 
 Android application
 ===================================
-
-<>.
+Test application for logging the some activities between android clients.
 
 Introduction
 ------------
-
-<>.
-
-<>.
-- <>.
-- <>.
-- <>.
-- <>.
-- <>.
-
+None.
 For more on <Application> refer to [link][1]
-
 [1]: http://developer.android.com/training/sync-adapters/index.html
 
 Pre-requisites
 --------------
-
 - Android SDK v23
 - Android Build Tools v23.0.0
 - Android Support Repository
@@ -30,12 +18,10 @@ Pre-requisites
 
 Screenshots
 -------------
-
-<img src="screenshots/main.png" height="400" alt="Screenshot"/> 
+<img src="screenshots/main.png" height="231" width="408" alt="Screenshot"/>
 
 Getting Started
 ---------------
-
 This sample uses the Gradle build system. To build this project, use the
 "gradlew build" command or use "Import Project" in Android Studio.
 

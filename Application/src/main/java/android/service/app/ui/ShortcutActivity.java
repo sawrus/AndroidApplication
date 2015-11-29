@@ -25,7 +25,7 @@ public class ShortcutActivity extends Activity
         context.sendBroadcast(removeIntent);
 
         Intent HomeScreenShortCut = new Intent(context,
-                MainActivity.class);
+                DataActivity.class);
 
         HomeScreenShortCut.setAction(Intent.ACTION_MAIN);
         HomeScreenShortCut.putExtra("duplicate", false);

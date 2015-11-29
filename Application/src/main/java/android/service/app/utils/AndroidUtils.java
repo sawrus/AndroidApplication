@@ -1,12 +1,14 @@
 package android.service.app.utils;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.service.app.gps.GpsService;
 import android.service.app.ui.ShortcutActivity;
 import android.service.app.db.data.GenericAccount;
 import android.service.app.db.data.impl.Account;
@@ -44,6 +46,19 @@ public enum AndroidUtils
             }
         };
         return (Account) databaseWork.run();
+    }
+
+    public void turnOnGpsIfNeeded(Activity activity)
+    {
+        GpsService gpsService;
+        try
+        {
+            gpsService = new GpsService(activity);
+            if(!gpsService.canGetLocation()) gpsService.showSettingsAlert();
+        } catch (Exception e)
+        {
+            AndroidUtils.handleExceptionWithoutThrow(e);
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)

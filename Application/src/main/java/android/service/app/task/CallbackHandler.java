@@ -1,4 +1,4 @@
-package android.service.app.rest;
+package android.service.app.task;
 
 public abstract class CallbackHandler<T>
 {

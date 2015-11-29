@@ -8,6 +8,7 @@ import android.service.app.db.data.impl.Message;
 import android.service.app.db.data.impl.Device;
 import android.service.app.db.data.impl.Sync;
 import android.service.app.db.data.impl.Account;
+import android.service.app.db.sqllite.impl.SqlLiteDatabaseHelper;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
@@ -62,16 +63,6 @@ public enum SqlLiteDatabase
         {add(new Gps());}
     })
     ;
-
-    //    SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context){
-    //        @Override
-    //        public Object execute()
-    //        {
-    //            return null;
-    //        }
-    //    };
-    //
-    //    databaseWork.run();
 
     public static class DatabaseWork extends SqlLiteDatabaseHelper
     {

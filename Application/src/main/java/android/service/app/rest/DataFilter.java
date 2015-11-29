@@ -1,4 +1,4 @@
-package android.service.app.json;
+package android.service.app.rest;
 
 import android.content.Context;
 

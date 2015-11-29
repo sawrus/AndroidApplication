@@ -1,4 +1,4 @@
-package android.service.app.json;
+package android.service.app.rest.impl;
 
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;

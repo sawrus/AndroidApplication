@@ -1,4 +1,4 @@
-package android.service.app.rest;
+package android.service.app.task;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -12,8 +12,9 @@ import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
 import android.service.app.db.data.GenericSync;
-import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
-import android.service.app.json.RestBridge;
+import android.service.app.db.sqllite.impl.SqlLiteDatabaseHelper;
+import android.service.app.rest.impl.RestBridge;
+import android.service.app.task.impl.SyncOutput;
 import android.support.annotation.NonNull;
 
 import java.util.Set;

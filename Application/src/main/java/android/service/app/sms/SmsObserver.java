@@ -1,4 +1,4 @@
-package android.service.app;
+package android.service.app.sms;
 
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Bundle;
+import android.service.app.Service;
 import android.service.app.utils.AndroidUtils;
 import android.telephony.SmsMessage;
 

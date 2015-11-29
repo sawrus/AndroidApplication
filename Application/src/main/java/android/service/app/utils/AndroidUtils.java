@@ -7,18 +7,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import android.service.app.ShortcutActivity;
+import android.service.app.ui.ShortcutActivity;
 import android.service.app.db.data.GenericAccount;
-import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.impl.Account;
 import android.service.app.db.data.impl.Device;
 import android.service.app.db.sqllite.SqlLiteDatabase;
-import android.service.app.json.DataFilter;
-import android.service.app.json.RestBridge;
-import android.service.app.json.RestHttpTextResponseHandler;
+import android.service.app.rest.DataFilter;
+import android.service.app.rest.impl.RestBridge;
 import android.service.app.ui.SettingsActivity;
 
-import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 import java.util.concurrent.atomic.AtomicBoolean;

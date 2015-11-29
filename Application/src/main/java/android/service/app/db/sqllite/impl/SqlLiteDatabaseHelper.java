@@ -1,4 +1,4 @@
-package android.service.app.db.sqllite;
+package android.service.app.db.sqllite.impl;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -11,6 +11,8 @@ import android.service.app.db.GenericDatabase;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
 import android.service.app.db.data.GenericDevice;
+import android.service.app.db.sqllite.SqlLiteApi;
+import android.service.app.db.sqllite.SqlLiteDatabase;
 import android.service.app.db.stub.DataStub;
 import android.service.app.db.data.GenericSync;
 import android.service.app.db.data.impl.Sync;

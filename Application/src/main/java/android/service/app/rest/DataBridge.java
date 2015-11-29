@@ -1,4 +1,4 @@
-package android.service.app.db;
+package android.service.app.rest;
 
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;

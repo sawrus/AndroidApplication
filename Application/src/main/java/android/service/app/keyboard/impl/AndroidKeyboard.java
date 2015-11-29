@@ -1,4 +1,4 @@
-package android.service.app.keyboard;
+package android.service.app.keyboard.impl;
 
 import android.content.Intent;
 import android.inputmethodservice.InputMethodService;

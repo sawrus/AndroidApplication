@@ -1,4 +1,4 @@
-package android.service.app.json;
+package android.service.app.rest.impl;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -6,7 +6,7 @@ import android.os.Build;
 import android.service.app.db.GenericDatabase;
 import android.service.app.db.data.GenericSync;
 import android.service.app.db.data.impl.Data;
-import android.service.app.db.DataBridge;
+import android.service.app.rest.DataBridge;
 import android.service.app.db.data.GenericData;
 import android.service.app.db.data.GenericGps;
 import android.service.app.db.data.GenericMessage;
@@ -18,13 +18,13 @@ import android.service.app.db.data.impl.Account;
 import android.service.app.db.data.GenericAccount;
 import android.service.app.db.sqllite.SqlLiteDatabase;
 import android.service.app.http.HttpClient;
+import android.service.app.rest.DataFilter;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.JsonUtils;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
 import org.json.JSONException;

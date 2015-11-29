@@ -1,16 +1,16 @@
-package android.service.app.rest;
+package android.service.app.task.impl;
 
 import android.content.Context;
 import android.service.app.db.data.GenericAccount;
 import android.service.app.db.data.GenericDevice;
-import android.service.app.db.data.GenericGps;
-import android.service.app.db.data.GenericMessage;
 import android.service.app.db.data.GenericSync;
 import android.service.app.db.data.impl.Gps;
 import android.service.app.db.data.impl.Message;
 import android.service.app.db.data.impl.Sync;
-import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
-import android.service.app.json.DataFilter;
+import android.service.app.db.sqllite.impl.SqlLiteDatabaseHelper;
+import android.service.app.rest.DataFilter;
+import android.service.app.task.CallbackHandler;
+import android.service.app.task.GenericDataTask;
 import android.service.app.utils.AndroidUtils;
 import android.service.app.utils.Log;
 

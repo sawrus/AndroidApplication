@@ -2,7 +2,7 @@ package android.service.app.db.data.impl;
 
 import android.service.app.db.GenericDatabase;
 import android.service.app.db.data.GenericData;
-import android.service.app.db.sqllite.SqlLiteData;
+import android.service.app.db.sqllite.impl.SqlLiteData;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

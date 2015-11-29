@@ -1,4 +1,4 @@
-package android.service.app;
+package android.service.app.ui;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -10,6 +10,8 @@ import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.service.app.R;
+import android.service.app.Service;
 import android.service.app.db.data.impl.Account;
 import android.service.app.gps.GpsService;
 import android.service.app.ui.SettingsActivity;

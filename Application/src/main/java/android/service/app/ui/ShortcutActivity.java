@@ -1,11 +1,9 @@
-package android.service.app;
+package android.service.app.ui;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.service.app.utils.AndroidUtils;
-import android.service.app.utils.Log;
 
 public class ShortcutActivity extends Activity
 {

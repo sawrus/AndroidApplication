@@ -1,11 +1,12 @@
-package android.service.app.utils;
+package android.service.app.sms;
 
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
-import android.service.app.SmsObserver;
+import android.service.app.sms.SmsObserver;
+import android.service.app.utils.Log;
 import android.telephony.SmsManager;
 import android.util.Pair;
 

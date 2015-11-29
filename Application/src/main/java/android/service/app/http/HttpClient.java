@@ -5,7 +5,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Looper;
 import android.os.StrictMode;
-import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
+import android.service.app.db.sqllite.impl.SqlLiteDatabaseHelper;
 import android.service.app.utils.Log;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -13,25 +13,16 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Set;
 
-import cz.msebera.android.httpclient.client.params.ClientPNames;
 import cz.msebera.android.httpclient.entity.StringEntity;
-import cz.msebera.android.httpclient.impl.client.DefaultHttpClient;
 
 public enum HttpClient
 {

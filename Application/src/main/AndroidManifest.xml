@@ -53,7 +53,7 @@
             </intent-filter>
         </service>
 
-        <receiver android:name=".OnBootReceiver" >
+        <receiver android:name=".receiver.OnBootReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.INPUT_METHOD_CHANGED" />
@@ -63,7 +63,7 @@
         </receiver>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:label="@string/title_activity_main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -75,7 +75,7 @@
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
             </intent-filter>
         </activity>
-        <activity android:name=".ShortcutActivity" >
+        <activity android:name=".ui.ShortcutActivity" >
 
         </activity>
         <activity

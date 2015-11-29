@@ -1,9 +1,10 @@
-package android.service.app;
+package android.service.app.ui.fragment;
 
 import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.os.Build;
 import android.os.Bundle;
+import android.service.app.R;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

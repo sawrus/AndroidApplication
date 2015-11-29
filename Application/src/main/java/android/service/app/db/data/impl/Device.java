@@ -6,7 +6,7 @@ import android.service.app.db.data.GenericAccount;
 import android.service.app.db.data.GenericDataApi;
 import android.service.app.db.data.GenericDevice;
 import android.service.app.db.sqllite.SqlLiteApi;
-import android.service.app.db.sqllite.SqlLiteDatabaseHelper;
+import android.service.app.db.sqllite.impl.SqlLiteDatabaseHelper;
 import android.support.annotation.NonNull;
 
 import java.util.Collections;

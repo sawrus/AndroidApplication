@@ -1,6 +1,7 @@
 package android.service.app.utils;
 
 import android.service.app.db.data.GenericData;
+import android.service.app.utils.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;

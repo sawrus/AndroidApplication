@@ -1,4 +1,4 @@
-package android.service.app.db.sqllite;
+package android.service.app.db.sqllite.impl;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -7,11 +7,11 @@ import android.service.app.db.GenericDatabase;
 import android.service.app.db.data.DeviceDependable;
 import android.service.app.db.data.GenericAccount;
 import android.service.app.db.data.GenericData;
-import android.service.app.db.data.GenericDataApi;
 import android.service.app.db.data.GenericDevice;
 import android.service.app.db.data.GenericSync;
 import android.service.app.db.data.impl.Device;
 import android.service.app.db.data.impl.Sync;
+import android.service.app.db.sqllite.SqlLiteApi;
 import android.service.app.utils.Log;
 import android.support.annotation.NonNull;
 

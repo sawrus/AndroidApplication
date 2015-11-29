@@ -54,7 +54,10 @@ public class ImportDataTask<Input> extends GenericDataTask<Input>
 
             //TODO: Need to support multiple devices sync schema
             Set<GenericDevice> devices = new LinkedHashSet<>();
-            devices.add(devicesFromDatabase.iterator().next());
+            if (!devicesFromDatabase.isEmpty())
+                devices.add(devicesFromDatabase.iterator().next());
+            else
+                devices.add(devicesAfterImport.iterator().next());
 
             GenericSync messageSync = points().filterBy(Sync.TABLE, Message.table_name);
             if (Log.isInfoEnabled()) Log.info("last.messageSync: " + messageSync);

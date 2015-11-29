@@ -36,21 +36,10 @@ public class ExportDataTask<Input> extends GenericDataTask<Input>
             Set<GenericGps> actualCoordinatesBySync = coordinates().getActualBySync();
 
             if (Log.isInfoEnabled()) Log.info("actualMessagesBySync: " + actualMessagesBySync);
-            if (!actualMessagesBySync.isEmpty())
-            {
-                restBridge.postMessages(actualMessagesBySync);
-                if (restBridge.isSuccessLastResponse())
-                    updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
-            }
+            if (!actualMessagesBySync.isEmpty()) restBridge.postMessages(actualMessagesBySync);
 
             if (Log.isInfoEnabled()) Log.info("actualCoordinatesBySync: " + actualCoordinatesBySync);
-            if (!actualCoordinatesBySync.isEmpty())
-            {
-                restBridge.postGps(actualCoordinatesBySync);
-                if (restBridge.isSuccessLastResponse())
-                    updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
-            }
-
+            if (!actualCoordinatesBySync.isEmpty()) restBridge.postGps(actualCoordinatesBySync);
         } catch (Exception e)
         {
             AndroidUtils.handleExceptionWithoutThrow(e);

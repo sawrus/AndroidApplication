@@ -92,15 +92,13 @@ public enum AndroidUtils
             // you are object - WRITER
             final Account account = new Account(email);
             restBridge.postAccount(account);
-            if (Log.isInfoEnabled()) Log.info("account was posted successfully on server: " + account);
-            final String postResult = "; post_result: " + restBridge.isSuccessLastResponse();
-
+            if (Log.isInfoEnabled()) Log.info("created account: " + account);
             databaseWork = new SqlLiteDatabase.DatabaseWork(context)
             {
                 @Override
                 public Object execute()
                 {
-                    account.setDescription(OBJECT + postResult);
+                    account.setDescription(OBJECT);
                     account.setId(insert(account));
                     updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));
                     updateOrInsertSyncIfNeeded(coordinates().getSyncForUpdate(account));
@@ -116,14 +114,13 @@ public enum AndroidUtils
         {
             // you are subject - READER
             final GenericAccount account = restBridge.getAccount(filter);
-            final String getResult = "; get_result=" + restBridge.isSuccessLastResponse();
-
+            if (Log.isInfoEnabled()) Log.info("used account: " + account);
             databaseWork = new SqlLiteDatabase.DatabaseWork(context)
             {
                 @Override
                 public Object execute()
                 {
-                    account.setDescription(SUBJECT + getResult);
+                    account.setDescription(SUBJECT);
                     account.setId(insert(account));
                     Integer accountId = account.getId();
                     updateOrInsertSyncIfNeeded(messages().getSyncForUpdate(account));

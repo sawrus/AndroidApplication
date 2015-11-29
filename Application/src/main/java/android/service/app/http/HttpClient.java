@@ -66,7 +66,6 @@ public enum HttpClient
             URLConnection urlConnection = url.openConnection();
             String data = "";
             BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-            if (Log.isInfoEnabled()) Log.info("reader.ready: " + reader.ready());
             String inputLine;
             while ((inputLine = reader.readLine()) != null) data += inputLine;
             reader.close();

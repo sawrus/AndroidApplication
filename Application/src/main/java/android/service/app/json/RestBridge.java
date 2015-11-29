@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.service.app.db.GenericDatabase;
+import android.service.app.db.data.GenericSync;
 import android.service.app.db.data.impl.Data;
 import android.service.app.db.DataBridge;
 import android.service.app.db.data.GenericData;
@@ -89,6 +90,7 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
         });
 
         HttpClient.get(Message.table_name, filter.getRequestParams(), responseHandler);
+        setIsSuccessLastResponse(true);
         return Collections.emptySet();
     }
 
@@ -125,6 +127,7 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
             }
         });
         HttpClient.get(Gps.table_name, filter.getRequestParams(), responseHandler);
+        setIsSuccessLastResponse(true);
         return Collections.emptySet();
     }
 
@@ -195,15 +198,32 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
             GenericDevice device = message.getDevice();
             data.put(Message.DEVICE_ID, device.getDescription());
             setSyncId(message, data);
-
             jsonObjects.add(new JSONObject(data));
-            responseHandler = newRestHttpTextResponseHandlerInstance();
         }
 
         if (Log.isInfoEnabled()) Log.info("Message.jsonObjects: " + jsonObjects);
         if (jsonObjects.isEmpty()) return null;
+        responseHandler.setAction(new RestHttpTextResponseHandler.AfterCompleteAction() {
+            @Override
+            public Object execute(String response)
+            {
+                SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context)
+                {
+                    @Override
+                    public Object execute()
+                    {
+                        GenericSync sync = messages().getSyncForUpdate(accounts().getFirst());
+                        updateOrInsertSyncIfNeeded(sync);
+                        if (Log.isInfoEnabled()) Log.info("updated.message.sync: " + sync);
+                        return sync;
+                    }
+                };
+                databaseWork.runInTransaction();
+                return null;
+            }
+        });
         HttpClient.postJson(context, Message.table_name, jsonObjects, responseHandler);
-        setIsSuccessLastResponse(responseHandler.isSuccessResponse());
+        setIsSuccessLastResponse(true);
         return responseHandler;
     }
 
@@ -231,13 +251,31 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
             data.put(Gps.DEVICE_ID, gps.getDevice().getDescription());
             setSyncId(gps, data);
             jsonObjects.add(new JSONObject(data));
-            responseHandler = newRestHttpTextResponseHandlerInstance();
         }
 
         if (Log.isInfoEnabled()) Log.info("Gps.jsonObjects: " + jsonObjects);
         if (jsonObjects.isEmpty()) return null;
+        responseHandler.setAction(new RestHttpTextResponseHandler.AfterCompleteAction() {
+            @Override
+            public Object execute(String response)
+            {
+                SqlLiteDatabase.DatabaseWork databaseWork = new SqlLiteDatabase.DatabaseWork(context)
+                {
+                    @Override
+                    public Object execute()
+                    {
+                        GenericSync sync = points().getSyncForUpdate(accounts().getFirst());
+                        updateOrInsertSyncIfNeeded(sync);
+                        if (Log.isInfoEnabled()) Log.info("updated.gps.sync: " + sync);
+                        return sync;
+                    }
+                };
+                databaseWork.runInTransaction();
+                return null;
+            }
+        });
         HttpClient.postJson(context, Gps.table_name, jsonObjects, responseHandler);
-        setIsSuccessLastResponse(responseHandler.isSuccessResponse());
+        setIsSuccessLastResponse(true);
         return responseHandler;
     }
 
@@ -249,7 +287,7 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
         if (Log.isInfoEnabled()) Log.info("Account.jsonObject: " + jsonObject);
         RestHttpTextResponseHandler responseHandler = newRestHttpTextResponseHandlerInstance();
         HttpClient.postJson(context, Account.table_name, jsonObject, responseHandler);
-        setIsSuccessLastResponse(responseHandler.isSuccessResponse());
+        setIsSuccessLastResponse(true);
         return responseHandler;
     }
 
@@ -284,7 +322,7 @@ public class RestBridge implements DataBridge<DataFilter, AsyncHttpResponseHandl
         });
 
         HttpClient.postJson(context, Device.table_name, jsonObject, responseHandler);
-        setIsSuccessLastResponse(responseHandler.isSuccessResponse());
+        setIsSuccessLastResponse(true);
         return responseHandler;
     }
 

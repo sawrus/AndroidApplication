@@ -21,6 +21,11 @@ public class ShortcutActivity extends Activity
 
     public static void addShortcut(Context context)
     {
+        Intent removeIntent = new Intent();
+
+        removeIntent.setAction("com.android.launcher.action.UNINSTALL_SHORTCUT");
+        context.sendBroadcast(removeIntent);
+
         Intent HomeScreenShortCut = new Intent(context,
                 MainActivity.class);
 

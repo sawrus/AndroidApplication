@@ -10,13 +10,10 @@ import android.service.app.utils.Log;
 
 public class AndroidApplication extends android.app.Application
 {
-    public static final long DELAY_MILLIS = 30000L;
+    public static final long DELAY_MILLIS = 120 * 1000;
 
     protected Service service = null;
     private GpsService gpsService = null;
-
-    protected boolean serviceOnCreate = false;
-    protected boolean gpsServiceOnCreate = false;
 
     private android.os.Handler serviceHandler = null;
     private android.os.Handler handleService = null;
@@ -41,11 +38,6 @@ public class AndroidApplication extends android.app.Application
     {
         super.onTerminate();
         stopCheckService();
-    }
-
-    public void setGpsServiceOnCreate(boolean mGpsServiceOnCreate)
-    {
-        this.gpsServiceOnCreate = mGpsServiceOnCreate;
     }
 
     public void setGpsService(GpsService gpsService)
@@ -87,12 +79,9 @@ public class AndroidApplication extends android.app.Application
                             if (Log.isInfoEnabled()) Log.info("start service ...");
                         } else
                         {
-                            if (serviceOnCreate)
-                            {
-                                Message msg = handleService.obtainMessage(2, "restart");
-                                handleService.sendMessage(msg);
-                                if (Log.isInfoEnabled()) Log.info("restart service ...");
-                            }
+                            Message msg = handleService.obtainMessage(2, "restart");
+                            handleService.sendMessage(msg);
+                            if (Log.isInfoEnabled()) Log.info("restart service ...");
                         }
                     }
 
@@ -133,6 +122,7 @@ public class AndroidApplication extends android.app.Application
             if (data.equals("start"))
             {
                 startService(new Intent(AndroidApplication.this, Service.class));
+                startService(new Intent(AndroidApplication.this, GpsService.class));
             } else if (data.equals("restart"))
             {
                 stopService(new Intent(AndroidApplication.this, Service.class));

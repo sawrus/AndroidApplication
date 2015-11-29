@@ -52,7 +52,6 @@ public class GpsService extends Service implements LocationListener
     {
         app = (AndroidApplication) getApplication();
         app.setGpsService(this);
-        app.setGpsServiceOnCreate(true);
 
         this.context = app.getApplicationContext();
 
@@ -72,7 +71,6 @@ public class GpsService extends Service implements LocationListener
     {
         if (Log.isInfoEnabled()) Log.info("call onStartCommand");
 
-        app.setGpsServiceOnCreate(true);
         this.context = app.getApplicationContext();
         remoteServiceStub = new RemoteService.Stub()
         {

@@ -64,21 +64,21 @@ public enum SqlLiteDatabase
     })
     ;
 
-    public static class DatabaseWork extends SqlLiteDatabaseHelper
+    public static class DatabaseWork<T> extends SqlLiteDatabaseHelper
     {
         public DatabaseWork(final Context context)
         {
             super(context, getActualDatabaseVersion());
         }
 
-        public Object run()
+        public T run()
         {
             return execute();
         }
 
-        public Object runInTransaction()
+        public T runInTransaction()
         {
-            Object result = null;
+            T result = null;
 
             SQLiteDatabase database = getWritableDatabase();
             database.beginTransaction();
@@ -99,7 +99,7 @@ public enum SqlLiteDatabase
             return result;
         }
 
-        public Object execute(){
+        public T execute(){
             if (Log.isWarnEnabled()) Log.warn("empty work successfully finished");
             return null;
         }

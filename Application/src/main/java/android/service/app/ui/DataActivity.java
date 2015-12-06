@@ -1,29 +1,28 @@
 package android.service.app.ui;
 
-import java.util.Locale;
-
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Build;
-import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
+import android.service.app.R;
+import android.service.app.utils.Log;
+import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
-import android.service.app.R;
+
+import java.util.Locale;
 
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-public class DataActivity extends Activity implements ActionBar.TabListener
+public class DataActivity extends Activity implements ActionBar.TabListener, MessageFragment.OnFragmentInteractionListener
 {
 
     /**
@@ -40,6 +39,7 @@ public class DataActivity extends Activity implements ActionBar.TabListener
      * The {@link ViewPager} that will host the section contents.
      */
     ViewPager mViewPager;
+    private MessageFragment messageFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -115,6 +115,7 @@ public class DataActivity extends Activity implements ActionBar.TabListener
         return super.onOptionsItemSelected(item);
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     @Override
     public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction)
     {
@@ -130,6 +131,11 @@ public class DataActivity extends Activity implements ActionBar.TabListener
 
     @Override
     public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction)
+    {
+    }
+
+    @Override
+    public void onFragmentInteraction(String id)
     {
     }
 
@@ -150,7 +156,9 @@ public class DataActivity extends Activity implements ActionBar.TabListener
         {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            return PlaceholderFragment.newInstance(position + 1);
+            MessageFragment messageFragment = new MessageFragment();
+            messageFragment.setContext(getApplicationContext());
+            return position == 0 ? messageFragment : PlaceholderFragment.newInstance(position + 1);
         }
 
         @Override
